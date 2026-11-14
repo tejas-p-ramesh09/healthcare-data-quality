@@ -12,3 +12,4 @@ Phase 0 locally verified repeatable patient IDs and birth dates across two small
 - [Phase 0 runbook and results](docs/PHASE_0.md)
 - [Phase 1 ingestion runbook and evidence](docs/PHASE_1.md)
 - [Phase 2 quality rules and evaluation](docs/PHASE_2.md)
+- [Phase 3 Patient matching and evaluation](docs/PHASE_3.md)

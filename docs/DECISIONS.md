@@ -21,6 +21,10 @@ Use a Python batch CLI, PostgreSQL JSONB source retention, and batch-scoped rela
 
 Quality policies run after ingestion on immutable batches. Use versioned Python rules, atomic PostgreSQL findings, and independent mutation labels and controls. Keep untouched baseline findings separate from scored outcomes. These checks cover the documented project rules. See the [Phase 2 runbook](PHASE_2.md).
 
+## Phase 3 decisions
+
+Match distinct published synthetic Patient batches with versioned demographic evidence, deterministic multi-pass blocking and exact and fitted statistical baselines. Keep recommendations separate from source data. The [Phase 3 runbook](PHASE_3.md) records fit and selection isolation, the locked evaluation, and transactional publication.
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |
