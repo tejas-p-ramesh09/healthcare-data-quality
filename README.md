@@ -4,8 +4,9 @@ An individual software engineering project that explores how integration enginee
 
 The proposed workflow ingests Synthea-generated HL7 FHIR R4 records, preserves the source data, validates and normalizes selected resources, flags quality issues and possible duplicate patients, and produces auditable reports.
 
-The project is at the documentation stage. The first technical milestone will test whether a small synthetic FHIR R4 dataset can be generated reproducibly and whether one controlled defect can be detected by a documented rule.
+Phase 0 locally verified repeatable patient IDs and birth dates across two small Synthea FHIR R4 runs and detected a controlled missing birth date. See the runbook for the commands, evidence, and limits.
 
 - [Project context and roadmap](docs/PROJECT_CONTEXT.md)
 - [Progress and next actions](docs/PROGRESS.md)
 - [Architectural decisions and open questions](docs/DECISIONS.md)
+- [Phase 0 runbook and results](docs/PHASE_0.md)

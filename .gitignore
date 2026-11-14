@@ -1,0 +1,33 @@
+# macOS
+.DS_Store
+
+# Python bytecode, test caches, coverage, and local builds
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+/build/
+/dist/
+*.egg-info/
+
+# Virtual environments and local secrets
+.venv/
+venv/
+.env
+.env.*
+!.env.example
+!.env.sample
+!.env.template
+
+# Local tools, temporary output, and generated synthetic datasets
+*.log
+*.tmp
+/work/
+/tmp/
+/output/
+/outputs/
+/data/generated/
