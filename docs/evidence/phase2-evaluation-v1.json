@@ -1,0 +1,149 @@
+{
+  "baseline_findings": 19,
+  "baseline_only": [],
+  "by_category": {
+    "completeness": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "cross_resource": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "domain": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "structure": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "temporal": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    }
+  },
+  "by_rule": {
+    "CONDITION_ABATEMENT_BEFORE_ONSET": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "MEDICATION_ORDER_AUTHORED_ON_MISSING": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "OBSERVATION_AFTER_ENCOUNTER_END": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "OBSERVATION_CODE_NO_USABLE_CODING": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    },
+    "PATIENT_BIRTH_DATE_MISSING": {
+      "f1": 1.0,
+      "fn": 0,
+      "fp": 0,
+      "precision": 1.0,
+      "recall": 1.0,
+      "support": 5,
+      "tn": 5,
+      "tp": 5
+    }
+  },
+  "cohort_baseline_findings": [],
+  "cohort_size": 50,
+  "engine_revision": "fb862ac80c86099ce4b5bae1b53b152ae56d07a28c98f8c7bec747629df62337",
+  "false_positives": [],
+  "injected_recovery": {
+    "CONDITION_ABATEMENT_BEFORE_ONSET": {
+      "detected": 5,
+      "injected": 5
+    },
+    "MEDICATION_ORDER_AUTHORED_ON_MISSING": {
+      "detected": 5,
+      "injected": 5
+    },
+    "OBSERVATION_AFTER_ENCOUNTER_END": {
+      "detected": 5,
+      "injected": 5
+    },
+    "OBSERVATION_CODE_NO_USABLE_CODING": {
+      "detected": 5,
+      "injected": 5
+    },
+    "PATIENT_BIRTH_DATE_MISSING": {
+      "detected": 5,
+      "injected": 5
+    }
+  },
+  "manifest_digest": "ab4248ec90d02cf7c897c0caceeaeb3b1568bd571af6128af5056d30142b28e2",
+  "micro": {
+    "f1": 1.0,
+    "fn": 0,
+    "fp": 0,
+    "precision": 1.0,
+    "recall": 1.0,
+    "support": 25,
+    "tn": 25,
+    "tp": 25
+  },
+  "missed_positives": [],
+  "new_unscored": [],
+  "unchanged_baseline": 19,
+  "variant_findings": 44
+}

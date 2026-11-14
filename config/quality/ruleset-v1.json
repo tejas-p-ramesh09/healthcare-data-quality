@@ -1,0 +1,11 @@
+{
+  "contract": 1,
+  "encounter_grace_hours": 24,
+  "rules": {
+    "PATIENT_BIRTH_DATE_MISSING": 1,
+    "OBSERVATION_CODE_NO_USABLE_CODING": 1,
+    "OBSERVATION_AFTER_ENCOUNTER_END": 1,
+    "CONDITION_ABATEMENT_BEFORE_ONSET": 1,
+    "MEDICATION_ORDER_AUTHORED_ON_MISSING": 1
+  }
+}

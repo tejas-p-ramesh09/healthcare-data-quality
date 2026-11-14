@@ -6,11 +6,15 @@ The owner approved one approval per milestone for the actions explicitly listed 
 
 ## Phase 1
 
-[Issue #5](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/5) and [PR #6](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/6) track PostgreSQL ingestion. Local verification published exactly 3,099 raw and 1,678 normalized baseline entries, passed recovery and concurrency tests, and measured five- and 25-patient datasets. The 100-patient request exceeded the per-file limit. See the [Phase 1 runbook](PHASE_1.md) for commands, results, and limitations.
+[Issue #5](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/5) and [PR #6](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/6) tracked PostgreSQL ingestion. PR #6 merged into main at `68ec43c` and Issue #5 closed. Local verification published exactly 3,099 raw and 1,678 normalized baseline entries, passed recovery and concurrency tests, and measured five- and 25-patient datasets. The 100-patient request exceeded the per-file limit. See the [Phase 1 runbook](PHASE_1.md) for commands, results, and limitations.
+
+## Phase 2
+
+The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database recovery tests, baseline findings, frozen mutation evaluation, and validation benchmarks. [Issue #7](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/7) tracks the milestone.
 
 ## Next actions
 
-1. Review Phase 1 and confirm checks on the current PR head.
+1. Review Phase 2 evidence and hosted checks.
 2. Obtain separate approval before merging or beginning another milestone.
 
 See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).

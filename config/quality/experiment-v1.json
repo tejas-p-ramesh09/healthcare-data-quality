@@ -1,0 +1,8 @@
+{
+  "version": 1,
+  "seed": 202703,
+  "positives_per_rule": 5,
+  "controls_per_rule": 5,
+  "baseline_manifest": "c61d6bf82e79c7cb2e3fd3d8a17988edd29a82b97653225365e7b2c49d11bc4d",
+  "ruleset": "config/quality/ruleset-v1.json"
+}
