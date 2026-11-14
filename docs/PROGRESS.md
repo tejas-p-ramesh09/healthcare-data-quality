@@ -1,14 +1,13 @@
 # Project progress
 
-The owner approved the five-file context setup. This documentation establishes the project scope, operating instructions, roadmap, and initial decisions. The initial commit is pending owner review. Application implementation and technical validation are pending.
+The initial documentation was committed on `main` at `d75047f` and confirmed by the owner.
+
+Phase 0 passed local validation on `codex/phase-0-synthea-feasibility`. The pinned Synthea 4.0.0 JAR passed checksum verification. Two independent FHIR R4 exports produced five distinct patients each, with matching patient IDs and birth dates. One controlled missing birth date produced the expected single finding and the baseline checksum stayed unchanged. Seven local unit tests passed.
+
+See the [Phase 0 runbook and evidence](PHASE_0.md), [project context](PROJECT_CONTEXT.md), and [decision log](DECISIONS.md).
 
 ## Next actions
 
-1. Review the documentation and confirm any edits before the initial commit.
-2. Present the Synthea feasibility plan and acceptance criteria for separate approval.
-3. After approval, record the generator version, settings, seed, and relevant runtime inputs. Generate a small synthetic FHIR R4 dataset and verify the selected baseline record passes the chosen check.
-4. Introduce one controlled defect in a copy, verify the expected finding, and record how to reproduce the demonstration. A candidate is removing `Patient.birthDate` to test a project completeness rule.
-
-The feasibility work will establish whether that single workflow is repeatable. Broader conformance coverage, detection accuracy, and performance remain to be evaluated in later milestones.
-
-See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).
+1. Review the local Phase 0 changes and evidence.
+2. Resolve the GitHub Issue, linked pull request, and hosted CI steps when remote setup and push are approved.
+3. Obtain separate approval for the next milestone plan and acceptance criteria before implementation.
