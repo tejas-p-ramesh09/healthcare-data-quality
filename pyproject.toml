@@ -2,7 +2,7 @@
 name = "healthcare-dq"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
-dependencies = ["psycopg[binary]>=3.2,<4"]
+dependencies = ["psycopg[binary]>=3.2,<4", "simplejson>=3.20,<4"]
 
 [dependency-groups]
 dev = ["ruff>=0.12,<1"]
