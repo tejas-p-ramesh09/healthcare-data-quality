@@ -1,13 +1,12 @@
 # Project progress
 
-The initial documentation was committed on `main` at `d75047f` and confirmed by the owner.
+Phase 0 is complete. [PR #2](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/2) merged into `main` at `66da976` and automatically closed [Issue #1](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/1). The [hosted workflow](https://github.com/tejas-p-ramesh09/healthcare-data-quality/actions/runs/43591712437) passed all 11 tests. The [Phase 0 runbook](PHASE_0.md) records the verified Synthea checksum, matching patient projections from two independent exports, and the single expected finding from a controlled missing birth date.
 
-Phase 0 passed local validation on `codex/phase-0-synthea-feasibility`. The pinned Synthea 4.0.0 JAR passed checksum verification. Two independent FHIR R4 exports produced five distinct patients each, with matching patient IDs and birth dates. One controlled missing birth date produced the expected single finding and the baseline checksum stayed unchanged. Seven local unit tests passed.
-
-See the [Phase 0 runbook and evidence](PHASE_0.md), [project context](PROJECT_CONTEXT.md), and [decision log](DECISIONS.md).
+The owner approved one approval per milestone for the actions explicitly listed in each plan. The [milestone workflow](../AGENTS.md) documents the GitHub identity checks, branch and PR process, CI verification, and actions that require separate approval. The documentation is tracked in [Issue #3](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/3) and [PR #4](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/4).
 
 ## Next actions
 
-1. Review the local Phase 0 changes and evidence.
-2. Resolve the GitHub Issue, linked pull request, and hosted CI steps when remote setup and push are approved.
-3. Obtain separate approval for the next milestone plan and acceptance criteria before implementation.
+1. Verify checks on the updated workflow PR and obtain separate approval before merging it.
+2. Present the next milestone plan and acceptance criteria for approval before implementation.
+
+See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).
