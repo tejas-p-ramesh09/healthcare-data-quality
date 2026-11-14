@@ -7,6 +7,12 @@
 - Verify important behavior with automated tests, including failures and edge cases. Base accuracy and performance claims on recorded measurements.
 - Keep architecture proportionate to an individual project. Introduce microservices, Kubernetes, Kafka, or Airflow only when a concrete requirement justifies them.
 
+## Adopted milestone workflow
+
+An approved plan can authorize the GitHub actions it explicitly lists for that milestone. This includes issue reuse or creation, feature branch creation, incremental commits, feature branch pushes, PR creation or updates, and CI verification. Verification of the repository root, GitHub account, remote, and branch precedes remote operations. PR validation uses read-only GitHub Actions permissions unless a milestone explicitly requires and approves additional access.
+
+Merging, deployment, branch deletion, history rewriting, destructive actions, and repository protection changes require separate explicit approval. See the [project instructions](../AGENTS.md) for the full workflow.
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |
