@@ -141,13 +141,39 @@ def build(source, output, seed):
     return summary
 
 
+def benchmark_inputs(source, output, size):
+    source, output = source.resolve(), output.resolve()
+    if output.is_relative_to(source) or source.is_relative_to(output):
+        raise ValueError("SOURCE_OUTPUT_OVERLAP")
+    source_hash, patients = parents(source)
+    if not 0 < size <= len(patients):
+        raise ValueError("INSUFFICIENT_BENCHMARK_INPUT")
+    output.mkdir()
+    results = {"source_manifest": source_hash}
+    for side in ("left", "right"):
+        rows = []
+        for i, key in enumerate(sorted(patients)[:size]):
+            patient = deepcopy(patients[key])
+            patient = {k: patient[k] for k in ("resourceType", "name", "birthDate", "address", "telecom")
+                       if k in patient}
+            patient["id"] = uid(f"benchmark/{size}/{side}/{key}")
+            if side == "right":
+                variant(patient, FAMILIES[i % len(FAMILIES)])
+            rows.append(patient)
+        results[side] = write_bundles(output / side, rows)
+    return results
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("source", type=Path)
     parser.add_argument("output", type=Path)
     parser.add_argument("--seed", type=int, default=303103)
+    parser.add_argument("--benchmark-size", type=int)
     args = parser.parse_args()
-    print(json.dumps(build(args.source, args.output, args.seed), indent=2))
+    result = (build(args.source, args.output, args.seed) if args.benchmark_size is None
+              else benchmark_inputs(args.source, args.output, args.benchmark_size))
+    print(json.dumps(result, indent=2))
 
 
 if __name__ == "__main__":

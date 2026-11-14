@@ -50,6 +50,8 @@ class MatchingRuns(unittest.TestCase):
                 c.execute("UPDATE matching_score SET score=0 WHERE run_id=%s", (rid,))
             with self.assertRaises(psycopg.errors.CheckViolation):
                 c.execute("UPDATE matching_run SET status='running' WHERE id=%s", (rid,))
+            with self.assertRaises(psycopg.errors.CheckViolation):
+                c.execute("UPDATE matching_attempt SET status='failed' WHERE run_id=%s", (rid,))
 
     def test_invalid_endpoint_and_rollback(self):
         original = service.publish

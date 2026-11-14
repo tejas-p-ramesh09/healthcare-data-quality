@@ -31,7 +31,7 @@ def report(truth, decisions):
         "full": metrics(tp, fp, len(positives) - tp, total - len(positives) - fp),
         "candidate_only": metrics(tp, fp, len(present) - tp, len(candidates) - len(present) - fp),
         "candidate_count": len(candidates), "possible_pairs": total,
-        "candidate_reduction": 1 - len(candidates) / total,
+        "candidate_reduction": 1 - len(candidates) / total if total else None,
         "blocking_recall": len(present) / len(positives) if positives else None,
         "blocked_positives": len(positives - candidates), "dispositions": dict(outcomes),
         "families": family,

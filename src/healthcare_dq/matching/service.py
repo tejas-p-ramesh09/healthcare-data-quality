@@ -96,10 +96,10 @@ def run(conn, left, right, model):
                   "no_candidate_right": len(b.keys() - {r for _, r in rows})}
         with conn.transaction():
             publish(conn, rid, left, right, rows, decisions)
-            conn.execute("UPDATE matching_run SET status='completed',counts=%s,finished_at=now() WHERE id=%s",
-                         (Jsonb(counts), rid))
             conn.execute("UPDATE matching_attempt SET status='completed',finished_at=now() WHERE id=%s",
                          (attempt,))
+            conn.execute("UPDATE matching_run SET status='completed',counts=%s,finished_at=now() WHERE id=%s",
+                         (Jsonb(counts), rid))
     except (psycopg.OperationalError, psycopg.InterfaceError):
         raise
     except (ValueError, psycopg.DatabaseError) as error:
@@ -107,9 +107,9 @@ def run(conn, left, right, model):
         if code not in {"PATIENT_LIMIT", "OVERSIZED_BLOCK", "CANDIDATE_LIMIT", "MATCHING_WRITE_FAILED"}:
             code = "MATCHING_FAILED"
         with conn.transaction():
-            conn.execute("UPDATE matching_run SET status='failed' WHERE id=%s", (rid,))
             conn.execute("UPDATE matching_attempt SET status='failed',finished_at=now(),error_code=%s WHERE id=%s",
                          (code, attempt))
+            conn.execute("UPDATE matching_run SET status='failed' WHERE id=%s", (rid,))
         return status(conn, rid)
     return {**status(conn, rid), "seconds": {"read": loaded - start, **stage,
             "decision": ranked - loaded - sum(stage.values()), "publish": perf_counter() - ranked}}
