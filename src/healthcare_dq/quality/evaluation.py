@@ -1,10 +1,19 @@
 """Score explicit labels, keeping incidental and baseline findings separate."""
 
+import hashlib
+import json
 from collections import Counter
 
 from .rules import RULES
 
 KEYS = ("rule_id", "rule_version", "path", "entry_index", "pointer")
+
+
+def load_manifest(path, expected_sha256):
+    data = path.read_bytes()
+    if hashlib.sha256(data).hexdigest() != expected_sha256:
+        raise ValueError("Frozen manifest checksum mismatch")
+    return json.loads(data)
 
 
 def key(row):

@@ -1,6 +1,9 @@
+import hashlib
 import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
 
-from healthcare_dq.quality.evaluation import score
+from healthcare_dq.quality.evaluation import load_manifest, score
 from healthcare_dq.quality.rules import RULES
 
 
@@ -24,3 +27,14 @@ class ScoringTests(unittest.TestCase):
         self.assertIsNone(report["by_rule"][RULES[1].code]["recall"])
         with self.assertRaisesRegex(ValueError, "Duplicate"):
             score(labels, before, after + [after[0]])
+
+    def test_frozen_manifest_checksum_rejects_tampering(self):
+        original = b'{"labels":[]}'
+        digest = hashlib.sha256(original).hexdigest()
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "manifest.json"
+            path.write_bytes(original)
+            self.assertEqual(load_manifest(path, digest), {"labels": []})
+            path.write_bytes(b'{"labels":[{}]}')
+            with self.assertRaisesRegex(ValueError, "checksum mismatch"):
+                load_manifest(path, digest)

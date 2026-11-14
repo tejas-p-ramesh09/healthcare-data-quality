@@ -17,6 +17,10 @@ Merging, deployment, branch deletion, history rewriting, destructive actions, an
 
 Use a Python batch CLI, PostgreSQL JSONB source retention, and batch-scoped relational projections. Immutable snapshots trade storage for explicit provenance and safe replay. A PostgreSQL session advisory lock and one publication transaction protect each batch. The [Phase 1 runbook](PHASE_1.md) defines the supported reference subset, recovery, and measured limits.
 
+## Phase 2 decisions
+
+Quality policies run after ingestion on immutable batches. Use versioned Python rules, atomic PostgreSQL findings, and independent mutation labels and controls. Keep untouched baseline findings separate from scored outcomes. These checks cover the documented project rules. See the [Phase 2 runbook](PHASE_2.md).
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |

@@ -10,7 +10,7 @@ from healthcare_dq.db import ROOT, connect
 
 from . import repository
 from .engine import digest, ruleset
-from .evaluation import score
+from .evaluation import load_manifest, score
 from .mutation import freeze
 from .service import validate
 
@@ -31,6 +31,7 @@ def main():
     evaluation.add_argument("manifest", type=Path)
     evaluation.add_argument("baseline", type=int)
     evaluation.add_argument("variant", type=int)
+    evaluation.add_argument("--manifest-sha256", required=True)
     args = parser.parse_args()
     try:
         if args.command == "mutate":
@@ -46,7 +47,7 @@ def main():
             elif args.command == "findings":
                 result = repository.findings(conn, args.run)
             else:
-                experiment = json.loads(args.manifest.read_text())
+                experiment = load_manifest(args.manifest, args.manifest_sha256)
                 runs = [repository.status(conn, rid) for rid in (args.baseline, args.variant)]
                 if (runs[0]["engine_revision"] != runs[1]["engine_revision"]
                     or any(run["status"] != "completed"
