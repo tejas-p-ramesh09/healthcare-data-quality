@@ -1,0 +1,7 @@
+{
+  "generator_config": "config/synthea/run.json",
+  "exporter_config": "config/synthea/phase0.properties",
+  "generated_populations": [25, 100],
+  "retained_population": 5,
+  "trials_per_population": 5
+}
