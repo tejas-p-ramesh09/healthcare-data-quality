@@ -9,7 +9,8 @@ import psycopg
 
 from healthcare_dq.db import ROOT, connect, migrate
 from healthcare_dq.ingestion import ingest
-from healthcare_dq.quality import repository as repo, service
+from healthcare_dq.quality import repository as repo
+from healthcare_dq.quality import service
 from healthcare_dq.quality.engine import ruleset
 from tests.unit.test_ingestion_inputs import entry, file
 
