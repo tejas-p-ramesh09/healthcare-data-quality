@@ -1,0 +1,21 @@
+# Architectural decisions
+
+## Confirmed project requirements
+
+- Use only synthetic patient data. Preserve reproducibility with controlled datasets, fixed seeds, recorded tool versions, and documented experiment configurations.
+- Obtain owner approval for each milestone plan and its acceptance criteria before implementation. Obtain explicit approval before pushing, merging, deploying, or making destructive changes.
+- Verify important behavior with automated tests, including failures and edge cases. Base accuracy and performance claims on recorded measurements.
+- Keep architecture proportionate to an individual project. Introduce microservices, Kubernetes, Kafka, or Airflow only when a concrete requirement justifies them.
+
+## Provisional technical decisions
+
+| Area | Starting proposal | Tradeoff or evidence needed |
+| --- | --- | --- |
+| Synthetic source and exchange format | Evaluate Synthea with HL7 FHIR R4 exports. | Verify the chosen generator version, export configuration, and repeatability in the feasibility milestone. |
+| Backend | Start with a modular Python application and consider FastAPI at the API milestone. | A single application simplifies development and deployment. Keep ingestion, validation, and matching boundaries clear so each can be tested independently. |
+| Storage | Evaluate PostgreSQL with JSONB source records and normalized relational tables. | Source records support audit and replay. Relational tables support queries and constraints. Storing both adds schema and consistency work. Define byte-level retention separately if needed. |
+| Validation | Track FHIR structure and project quality rules separately. | This helps reviewers tell a data exchange conformance issue from a project policy finding. Select the resource and profile coverage after inspecting the synthetic input. |
+| Patient matching | Start with blocking and interpretable similarity scores. Select features and thresholds using labeled synthetic cases. | Blocking reduces pair comparisons and can miss true matches. Establish its recall before comparing scoring methods or adding a learned model. |
+| Reporting and delivery | Consider React and TypeScript, Docker, GitHub Actions, and a simple cloud deployment. | Select the UI scope, hosting, and monitoring after the core flow works and deployment requirements are clear. |
+
+See the [project context](PROJECT_CONTEXT.md) for the proposed workflow.
