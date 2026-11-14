@@ -1,9 +1,14 @@
+from collections import Counter
+from contextlib import redirect_stdout
 import copy
+from io import StringIO
 import json
 from pathlib import Path
 from tempfile import TemporaryDirectory
 import unittest
+from unittest.mock import patch
 
+from scripts import phase0
 from scripts.phase0 import RULE, findings, inject, inventory, read_bundle, sha256
 
 
@@ -90,3 +95,78 @@ class PhaseZeroTests(unittest.TestCase):
                 (root / filename).write_text(json.dumps(bundle(patient())), encoding="utf-8")
             with self.assertRaisesRegex(ValueError, "Duplicate Patient.id"):
                 inventory(root)
+
+
+class ConfigurationTests(unittest.TestCase):
+    def test_malformed_configurations_report_the_file_and_problem(self):
+        settings = phase0.load_settings(phase0.CONFIG / "run.json")
+        missing = dict(settings)
+        del missing["jar_url"]
+        cases = (
+            ("{", "could not read configuration"),
+            ("[]", "expected a JSON object"),
+            (json.dumps(missing), "missing required key 'jar_url'"),
+            (json.dumps(dict(settings, timezone=0)), "'timezone' must be a nonempty string"),
+            (json.dumps(dict(settings, location=" ")), "'location' must be a nonempty string"),
+            (json.dumps(dict(settings, population="5")), "'population' must be an integer"),
+            (json.dumps(dict(settings, clinician_seed=True)), "'clinician_seed' must be an integer"),
+            (json.dumps(dict(settings, population=0)), "'population' must be positive"),
+        )
+        with TemporaryDirectory() as tmp:
+            path = Path(tmp) / "run.json"
+            for raw, message in cases:
+                with self.subTest(message=message):
+                    path.write_text(raw, encoding="utf-8")
+                    with self.assertRaisesRegex(ValueError, f"run.json: {message}"):
+                        phase0.load_settings(path)
+
+
+class OrchestrationTests(unittest.TestCase):
+    def setUp(self):
+        root = Path(self.enterContext(TemporaryDirectory()))
+        self.jar = root / "synthea.jar"
+        self.jar.write_bytes(b"test input, not an executable")
+        self.output = root / "output"
+        self.java = root / "unused-java"
+        settings = phase0.load_settings(phase0.CONFIG / "run.json")
+        self.settings = dict(settings, jar_sha256=sha256(self.jar))
+        self.enterContext(patch.object(phase0, "CONFIG", root))
+        self.enterContext(redirect_stdout(StringIO()))
+
+    def write_settings(self):
+        path = phase0.CONFIG / "run.json"
+        path.write_text(json.dumps(self.settings), encoding="utf-8")
+
+    def test_rejects_mismatched_checksum_before_generating(self):
+        self.settings["jar_sha256"] = "0" * 64
+        self.write_settings()
+        with patch.object(phase0, "generate") as generate:
+            with self.assertRaisesRegex(ValueError, "JAR checksum mismatch"):
+                phase0.run(self.java, self.jar, self.output)
+        generate.assert_not_called()
+        self.assertFalse(self.output.exists())
+
+    def test_rejects_unexpected_patient_count(self):
+        self.write_settings()
+        inventory_result = ({}, Counter(), 1)
+        with patch.object(phase0, "generate", return_value=inventory_result) as generate:
+            with self.assertRaisesRegex(ValueError, "baseline: expected 5 distinct patients"):
+                phase0.run(self.java, self.jar, self.output)
+        generate.assert_called_once()
+        self.assertFalse((self.output / "report.json").exists())
+
+    def test_rejects_different_patient_projection_with_same_count(self):
+        self.write_settings()
+        baseline = {
+            f"synthetic-{index}": ("1990-01-01", self.output / "unused.json", index)
+            for index in range(self.settings["population"])
+        }
+        repeat = baseline.copy()
+        repeat["synthetic-0"] = ("1991-01-01", self.output / "unused.json", 0)
+        inventories = [(records, Counter(Patient=len(records)), 1)
+                       for records in (baseline, repeat)]
+        with patch.object(phase0, "generate", side_effect=inventories) as generate:
+            with self.assertRaisesRegex(ValueError, "Patient ID and birthDate projections differ"):
+                phase0.run(self.java, self.jar, self.output)
+        self.assertEqual(generate.call_count, 2)
+        self.assertFalse((self.output / "mutated.json").exists())

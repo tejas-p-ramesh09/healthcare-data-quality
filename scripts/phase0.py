@@ -108,8 +108,34 @@ def generate(java, jar, directory, settings):
     return inventory(directory / "fhir")
 
 
+def load_settings(path):
+    try:
+        settings = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError) as error:
+        raise ValueError(f"{path}: could not read configuration: {error}") from error
+    if not isinstance(settings, dict):
+        raise ValueError(f"{path}: expected a JSON object")
+
+    strings = (
+        "synthea_version", "jar_url", "jar_sha256", "location",
+        "reference_date", "end_date", "timezone",
+    )
+    integers = ("population", "population_seed", "clinician_seed")
+    for key in (*strings, *integers):
+        if key not in settings:
+            raise ValueError(f"{path}: missing required key '{key}'")
+        value = settings[key]
+        if key in strings and (not isinstance(value, str) or not value.strip()):
+            raise ValueError(f"{path}: '{key}' must be a nonempty string")
+        if key in integers and (not isinstance(value, int) or isinstance(value, bool)):
+            raise ValueError(f"{path}: '{key}' must be an integer")
+    if settings["population"] < 1:
+        raise ValueError(f"{path}: 'population' must be positive")
+    return settings
+
+
 def run(java, jar, output):
-    settings = json.loads((CONFIG / "run.json").read_text(encoding="utf-8"))
+    settings = load_settings(CONFIG / "run.json")
     jar_digest = sha256(jar)
     if jar_digest != settings["jar_sha256"]:
         raise ValueError("Synthea JAR checksum mismatch")
@@ -131,7 +157,7 @@ def run(java, jar, output):
         raise ValueError("Patient ID and birthDate projections differ")
 
     patient_id = min(baseline)
-    value, source, index = baseline[patient_id]
+    _, source, index = baseline[patient_id]
     original = read_bundle(source)
     original_digest = sha256(source)
     if findings(original):

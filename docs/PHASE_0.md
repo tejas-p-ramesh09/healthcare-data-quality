@@ -41,7 +41,7 @@ file "$java"
 "$py" -m unittest discover -s tests -v
 ```
 
-Use a new output directory for each invocation. The script verifies the JAR checksum before launch and prints both fully expanded Java commands. With the paths above, the Java invocation has this form, once for `baseline` and once for `repeat`:
+Use a new output directory for each invocation. Invalid run configuration stops the script before generation. Errors identify the configuration file and describe the JSON error, missing key, or invalid value. The script verifies the JAR checksum before launch and prints both fully expanded Java commands. With the paths above, the Java invocation has this form, once for `baseline` and once for `repeat`:
 
 ```sh
 run=baseline  # repeat for the second invocation
@@ -66,7 +66,7 @@ Both generator logs reported the expected population, seeds, location, and refer
 
 The selected baseline Bundle yielded zero findings. Removing `/entry/0/resource/birthDate` in a copy produced exactly one `PATIENT_BIRTH_DATE_MISSING` finding for the selected synthetic patient. Parsed equality against an expected one-field removal verified the mutation. The original Bundle SHA-256 before and after was `e6d1a60ba487bdd96c271b57204a9e4d9c0b42fe31642e4a23913cffdf511f57`.
 
-All seven local unit tests passed. They cover baseline and mutated input, missing/null/blank dates, incorrect types, malformed input, ambiguous targets, source preservation, no overwrite, and missing or duplicate exports.
+All 11 local tests passed. They cover baseline and mutated input, missing/null/blank dates, incorrect types, malformed input and configuration, ambiguous targets, source preservation, no overwrite, and missing or duplicate exports. The suite uses a stubbed generator to verify rejection of a checksum mismatch, an unexpected patient count, and a changed patient projection. The tests require Python only.
 
 ## Limits
 
