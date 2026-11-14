@@ -13,6 +13,10 @@ An approved plan can authorize the GitHub actions it explicitly lists for that m
 
 Merging, deployment, branch deletion, history rewriting, destructive actions, and repository protection changes require separate explicit approval. See the [project instructions](../AGENTS.md) for the full workflow.
 
+## Phase 1 decisions
+
+Use a Python batch CLI, PostgreSQL JSONB source retention, and batch-scoped relational projections. Immutable snapshots trade storage for explicit provenance and safe replay. A PostgreSQL session advisory lock and one publication transaction protect each batch. The [Phase 1 runbook](PHASE_1.md) defines the supported reference subset, recovery, and measured limits.
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |
