@@ -3,7 +3,7 @@
 import hashlib
 import random
 from collections import Counter, defaultdict
-from datetime import datetime, timedelta
+from datetime import timedelta
 from pathlib import Path
 
 import simplejson
@@ -12,40 +12,45 @@ from healthcare_dq.fhir import prepare
 from healthcare_dq.inputs import discover, manifest, parse
 
 from .engine import canonical, digest
+from .rules import instant, nonblank
 
 
-def date(value):
-    if not isinstance(value, str) or "T" not in value:
-        return None
+def replacement_time(anchor, delta):
     try:
-        result = datetime.fromisoformat(value)
-    except ValueError:
+        return (anchor + delta).isoformat()
+    except OverflowError:
         return None
-    return result if result.utcoffset() is not None else None
-
 
 def candidates(entries, grace):
     """Independent preconditions and expected label keys for experiment v1."""
     encounters = {e.identifier: e.payload for e in entries if e.kind == "Encounter"}
     for e in entries:
         p = e.payload
-        if e.kind == "Patient" and p.get("birthDate", "").strip():
+        if e.kind == "Patient" and nonblank(p.get("birthDate")):
             yield e, "PATIENT_BIRTH_DATE_MISSING", "/birthDate", "remove", None
         if e.kind == "Observation":
-            if any(c.get("system", "").strip() and c.get("code", "").strip()
-                   for c in p.get("code", {}).get("coding", [])):
+            code = p.get("code")
+            codings = code.get("coding") if isinstance(code, dict) else None
+            if isinstance(codings, list) and any(
+                isinstance(c, dict) and nonblank(c.get("system")) and nonblank(c.get("code"))
+                for c in codings
+            ):
                 yield e, "OBSERVATION_CODE_NO_USABLE_CODING", "/code/coding", "replace", []
-            end = date(encounters.get(e.fields["encounter_id"], {}).get("period", {}).get("end"))
-            at = date(p.get("effectiveDateTime"))
-            if end and at and at - end <= grace:
-                yield e, "OBSERVATION_AFTER_ENCOUNTER_END", "/effectiveDateTime", "replace", (
-                    end + grace + timedelta(seconds=60)).isoformat()
+            encounter = encounters.get(e.fields.get("encounter_id"), {})
+            period = encounter.get("period")
+            end = instant(period.get("end")) if isinstance(period, dict) else None
+            at = instant(p.get("effectiveDateTime"))
+            if end is not None and at is not None and at - end <= grace:
+                replacement = replacement_time(end, grace + timedelta(seconds=60))
+                if replacement is not None:
+                    yield e, "OBSERVATION_AFTER_ENCOUNTER_END", "/effectiveDateTime", "replace", replacement
         if e.kind == "Condition":
-            start, end = date(p.get("onsetDateTime")), date(p.get("abatementDateTime"))
-            if start and end and start <= end:
-                yield e, "CONDITION_ABATEMENT_BEFORE_ONSET", "/abatementDateTime", "replace", (
-                    start - timedelta(seconds=60)).isoformat()
-        if e.kind == "MedicationRequest" and p.get("intent") == "order" and p.get("authoredOn", "").strip():
+            start, end = instant(p.get("onsetDateTime")), instant(p.get("abatementDateTime"))
+            if start is not None and end is not None and start <= end:
+                replacement = replacement_time(start, -timedelta(seconds=60))
+                if replacement is not None:
+                    yield e, "CONDITION_ABATEMENT_BEFORE_ONSET", "/abatementDateTime", "replace", replacement
+        if e.kind == "MedicationRequest" and p.get("intent") == "order" and nonblank(p.get("authoredOn")):
             yield e, "MEDICATION_ORDER_AUTHORED_ON_MISSING", "/authoredOn", "remove", None
 
 

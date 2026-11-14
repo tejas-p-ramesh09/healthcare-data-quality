@@ -38,3 +38,16 @@ class ScoringTests(unittest.TestCase):
             path.write_bytes(b'{"labels":[{}]}')
             with self.assertRaisesRegex(ValueError, "checksum mismatch"):
                 load_manifest(path, digest)
+
+    def test_recovery_excludes_baseline_overlap_without_changing_classification(self):
+        labels = [{**finding(i), "positive": i < 4} for i in range(5)]
+        report = score(labels, [finding(0), finding(3)], [finding(0), finding(1)])
+        self.assertEqual(report["micro"], {
+            "tp": 2, "fp": 0, "fn": 2, "tn": 1, "support": 4,
+            "precision": 1.0, "recall": 0.5, "f1": 2 / 3,
+        })
+        self.assertEqual(report["injected_recovery"][RULES[0].code], {
+            "detected": 1, "injected": 4, "baseline_overlapping": 2, "eligible_for_recovery": 2,
+        })
+        self.assertEqual([key[3] for key in report["recovery_baseline_overlapping_positives"]], [0, 3])
+        self.assertEqual([key[3] for key in report["missed_positives"]], [2, 3])

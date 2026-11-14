@@ -141,3 +141,25 @@ batch dominated these measurements. Analyze the query plan and consider indexing
 or reducing raw payload reads before making throughput claims at larger sizes.
 The benchmark measured process peak RSS, not database memory. The existing
 Phase 1 input size limits still apply. No new capacity or latency SLA is claimed.
+
+### Evaluation report compatibility
+
+Variant classification compares all frozen labels with variant findings. A
+positive still present in the variant is a true positive even when the same
+finding already existed in the baseline. Injected-defect recovery credits only
+positive keys present in the variant and absent from the baseline.
+
+In new reports, `recovery_baseline_overlapping_positives` lists all positive
+keys already in the baseline. Each `injected_recovery` entry retains
+`injected` as the number of labeled positives, adds `baseline_overlapping`
+and `eligible_for_recovery`, and counts only new detections in `detected`.
+Use `eligible_for_recovery` as the denominator for a recovery rate. A zero
+denominator means recovery is undefined. The historical v1 summary retains
+its original schema and values. Rescoring its original manifest reproduces
+those counts because none of its positive keys overlapped baseline findings.
+
+Regenerating the v1 variant with the corrected generator preserves the labels
+and variant bytes for the retained inputs. New manifests record the changed
+operator source checksum and therefore have a different manifest file SHA-256.
+Use the new manifest's checksum when scoring a regenerated variant, or use the
+original frozen manifest and checksum above to reproduce the historical result.

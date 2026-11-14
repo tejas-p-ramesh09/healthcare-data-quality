@@ -44,6 +44,13 @@ def score(labels, baseline, variant):
     def get(c):
         return metrics(*(c[k] for k in ("tp", "fp", "fn", "tn")))
 
+    positives = {item for item, positive in truth.items() if positive}
+    overlapping = positives & before
+    newly_detected = (positives & after) - before
+    injected = Counter(item[0] for item in positives)
+    detected = Counter(item[0] for item in newly_detected)
+    overlap_counts = Counter(item[0] for item in overlapping)
+
     by_category = {}
     for rule in RULES:
         by_category.setdefault(rule.category, Counter()).update(counts[rule.code])
@@ -57,6 +64,11 @@ def score(labels, baseline, variant):
         "cohort_size": len(truth), "by_rule": {r: get(c) for r, c in counts.items()},
         "by_category": {r: get(c) for r, c in by_category.items()},
         "micro": get(sum(counts.values(), Counter())),
-        "injected_recovery": {r: {"detected": c["tp"], "injected": c["tp"] + c["fn"]}
-                              for r, c in counts.items()},
+        "recovery_baseline_overlapping_positives": sorted(overlapping),
+        "injected_recovery": {
+            rule: {"detected": detected[rule], "injected": injected[rule],
+                   "baseline_overlapping": overlap_counts[rule],
+                   "eligible_for_recovery": injected[rule] - overlap_counts[rule]}
+            for rule in counts
+        },
     }
