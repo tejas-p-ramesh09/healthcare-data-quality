@@ -2,6 +2,7 @@
 
 import json
 import logging
+import os
 
 import uvicorn
 
@@ -21,7 +22,8 @@ def main():
     logger = logging.getLogger("healthcare_dq")
     logger.addHandler(handler)
     logger.setLevel(logging.INFO)
-    uvicorn.run("healthcare_dq.api.app:create_app", factory=True, host="127.0.0.1", port=8000,
+    uvicorn.run("healthcare_dq.api.app:create_app", factory=True,
+                host="0.0.0.0" if os.getenv("WORKFLOW_CONTAINER") == "1" else "127.0.0.1", port=8000,
                 access_log=False, proxy_headers=False)
 
 

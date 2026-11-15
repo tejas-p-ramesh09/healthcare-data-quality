@@ -5,7 +5,7 @@ services:
       POSTGRES_DB: healthcare
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
     ports:
-      - "127.0.0.1:55432:5432"
+      - "127.0.0.1:${POSTGRES_LOCAL_PORT:-55432}:5432"
     volumes:
       - ingestion_db:/var/lib/postgresql/data
     healthcheck:
@@ -13,5 +13,36 @@ services:
       interval: 2s
       timeout: 3s
       retries: 20
+  migrate:
+    profiles: [workflow]
+    build: .
+    environment:
+      MIGRATION_DATABASE_URL: "postgresql://postgres:${POSTGRES_PASSWORD}@postgres:5432/healthcare"
+      INGEST_PASSWORD: ${INGEST_PASSWORD:-}
+      WORKFLOW_EXEC_PASSWORD: ${WORKFLOW_EXEC_PASSWORD:-}
+      WORKFLOW_REPORT_PASSWORD: ${WORKFLOW_REPORT_PASSWORD:-}
+    command: ["/opt/venv/bin/python", "scripts/bootstrap_workflow.py"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+  api:
+    profiles: [workflow]
+    build: .
+    environment:
+      WORKFLOW_CONTAINER: "1"
+      WORKFLOW_TOKEN: ${WORKFLOW_TOKEN:-}
+      WORKFLOW_EXEC_DATABASE_URL: "postgresql://workflow_executor:${WORKFLOW_EXEC_PASSWORD:-}@postgres:5432/healthcare"
+      WORKFLOW_REPORT_DATABASE_URL: "postgresql://workflow_reporter:${WORKFLOW_REPORT_PASSWORD:-}@postgres:5432/healthcare"
+    ports:
+      - "127.0.0.1:${WORKFLOW_PORT:-8000}:8000"
+    read_only: true
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "/opt/venv/bin/python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health/ready', timeout=3)"]
+      interval: 5s
+      timeout: 4s
+      retries: 10
 volumes:
   ingestion_db:

@@ -8,7 +8,7 @@ from pathlib import Path
 
 from healthcare_dq.db import ROOT
 from healthcare_dq.inputs import discover, manifest
-from healthcare_dq.quality.engine import ruleset
+from healthcare_dq.quality.engine import parse_ruleset
 
 from . import stages
 from .service import WorkflowError
@@ -60,10 +60,13 @@ def resolve(root, catalog, request):
             raise ValueError("Fixture manifest changed")
         rules_path = safe(root, profile["ruleset"])
         model_path = safe(root, profile["model"])
+        blobs = {}
         for path, label in ((rules_path, "ruleset"), (model_path, "model")):
-            if hashlib.sha256(path.read_bytes()).hexdigest() != profile[label + "_file_sha256"]:
+            data = path.read_bytes()
+            if hashlib.sha256(data).hexdigest() != profile[label + "_file_sha256"]:
                 raise ValueError("Artifact checksum changed")
-        config, model = ruleset(rules_path), json.loads(model_path.read_bytes())
+            blobs[label] = data
+        config, model = parse_ruleset(blobs["ruleset"]), json.loads(blobs["model"])
         spec = {
             "profile": profile_key,
             "inputs": [{"key": key, "source": row["source"], "manifest": h}

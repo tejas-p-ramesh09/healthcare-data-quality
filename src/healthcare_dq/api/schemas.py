@@ -61,6 +61,11 @@ class Summary(BaseModel):
     inputs: list[Input]
     ruleset_sha256: str
     model_sha256: str
+    ruleset_file_sha256: str
+    model_file_sha256: str
+    quality_revision: str
+    matching_execution: str
+    ingestion_contract: int
     created_at: datetime
     updated_at: datetime
     stages: list[Stage]

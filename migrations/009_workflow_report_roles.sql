@@ -67,3 +67,32 @@ SELECT EXISTS(SELECT FROM schema_migration WHERE version='009_workflow_report_ro
 GRANT SELECT ON workflow_report,workflow_stage_report,workflow_batch_report,workflow_file_report,
     workflow_finding_report,workflow_recommendation_report,workflow_schema_ready TO workflow_reporter;
 GRANT SELECT ON workflow_schema_ready TO workflow_executor;
+
+CREATE FUNCTION workflow_expected_identity() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE pinned jsonb;
+DECLARE expected_key jsonb;
+DECLARE left_id bigint;
+DECLARE right_id bigint;
+BEGIN
+    IF NEW.status <> 'running' THEN RETURN NEW; END IF;
+    SELECT spec INTO pinned FROM workflow WHERE id=NEW.workflow_id;
+    IF NEW.step < 2 THEN
+        expected_key := jsonb_build_array(pinned->'inputs'->NEW.step->'source',
+            pinned->'inputs'->NEW.step->'manifest', pinned->'ingestion_contract');
+    ELSE
+        SELECT batch_id INTO left_id FROM workflow_stage WHERE workflow_id=NEW.workflow_id AND step=0;
+        SELECT batch_id INTO right_id FROM workflow_stage WHERE workflow_id=NEW.workflow_id AND step=1;
+        IF NEW.step < 4 THEN
+            expected_key := jsonb_build_array(CASE WHEN NEW.step=2 THEN left_id ELSE right_id END,
+                pinned->'ruleset_sha256',pinned->'quality_revision');
+        ELSE
+            expected_key := jsonb_build_array(left_id,right_id,pinned->'matching_execution');
+        END IF;
+    END IF;
+    IF NEW.expected IS DISTINCT FROM expected_key THEN
+        RAISE EXCEPTION 'Workflow stage does not match pinned identity' USING ERRCODE='23514';
+    END IF;
+    RETURN NEW;
+END $$;
+CREATE TRIGGER workflow_pinned_identity BEFORE UPDATE ON workflow_stage
+FOR EACH ROW EXECUTE FUNCTION workflow_expected_identity();

@@ -29,7 +29,7 @@ def create_app(settings=None):
     settings = settings or Settings.from_env()
     app = FastAPI(title="Healthcare Data Quality Workflow", version="1",
                   responses={v[0]: {"model": schemas.Error} for v in ERRORS.values()})
-    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost", "testserver"])
+    app.add_middleware(TrustedHostMiddleware, allowed_hosts=["127.0.0.1", "localhost"])
     app.add_middleware(LocalBoundary, token=settings.token)
 
     @app.exception_handler(service.WorkflowError)

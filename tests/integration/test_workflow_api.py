@@ -34,11 +34,11 @@ class WorkflowAPI(unittest.TestCase):
     def setUp(self):
         self.settings = Settings(TOKEN, reader=lambda: restricted("workflow_reporter"),
                                  executor=lambda: restricted("workflow_executor"))
-        self.client = self.enterContext(TestClient(create_app(self.settings), headers=HEADERS))
+        self.client = self.enterContext(TestClient(create_app(self.settings), base_url="http://localhost", headers=HEADERS))
         self.header = {"Idempotency-Key": uuid4().hex}
 
     def test_security_and_error_contract(self):
-        with TestClient(create_app(self.settings)) as anonymous:
+        with TestClient(create_app(self.settings), base_url="http://localhost") as anonymous:
             self.assertEqual(anonymous.get("/v1/catalog").status_code, 401)
         self.assertEqual(self.client.get("/health/ready").status_code, 200)
         self.assertEqual(self.client.post("/v1/workflows", content="x").status_code, 415)
@@ -148,3 +148,69 @@ class WorkflowAPI(unittest.TestCase):
             self.assertNotEqual(listing["items"][0]["id"], nxt.json()["items"][0]["id"])
             bad = self.client.get(path + "/batches/left/files", params={"cursor": listing["next_cursor"]})
             self.assertEqual(bad.json()["error"]["code"], "INVALID_CURSOR")
+
+    def test_wrong_result_link_and_failure_leave_prior_reports_visible(self):
+        from psycopg.errors import CheckViolation
+        from psycopg.types.json import Jsonb
+
+        from healthcare_dq.workflow import service
+
+        _, original = self.settings.catalog()
+        tag = uuid4().hex
+
+        def resolve(request):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += "-" + tag
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, resolve)):
+            created = self.client.post("/v1/workflows", headers=self.header, json=REQUEST)
+            wid, path = created.json()["id"], created.headers["location"]
+            for _ in range(3):
+                response = self.client.post(path + "/advance")
+                self.assertEqual(response.status_code, 200, response.text)
+            with restricted("workflow_executor") as conn:
+                workflow, rows = service.read(conn, wid)
+                with self.assertRaises(CheckViolation), conn.transaction():
+                    expected = stages.key(workflow["spec"], 3, rows)
+                    conn.execute("""UPDATE workflow_stage SET status='running',expected=%s
+                        WHERE workflow_id=%s AND step=3""", (Jsonb(expected), wid))
+                    conn.execute("""UPDATE workflow_stage SET status='completed',quality_id=%s
+                        WHERE workflow_id=%s AND step=3""", (rows[2]["quality_id"], wid))
+                self.assertNotEqual(rows[0]["batch_id"], rows[1]["batch_id"])
+            self.assertEqual(self.client.post(path + "/advance").status_code, 200)
+            with restricted("workflow_executor") as conn, self.assertRaises(CheckViolation):
+                conn.execute("""UPDATE workflow_stage SET status='running',expected=%s
+                        WHERE workflow_id=%s AND step=4""", (Jsonb(["wrong"]), wid))
+            for _ in range(3):
+                failure = {"status": "failed", "attempts": [[1, "failed", "MATCHING_FAILED"]]}
+                with patch.object(stages, "execute", return_value=failure):
+                    result = self.client.post(path + "/advance")
+                self.assertEqual(result.json()["stages"][4]["failure"]["code"], "MATCHING_FAILED")
+            self.assertEqual(self.client.post(path + "/advance").json()["error"]["code"],
+                             "STAGE_NOT_RETRYABLE")
+            self.assertEqual(self.client.get(path + "/quality-findings?side=left").json()["items"], [])
+            self.assertEqual(self.client.get(path + "/recommendations?method=exact").json()["error"]["code"],
+                             "STAGE_FAILED")
+
+    def test_pinned_identity_is_not_substituted(self):
+        _, original = self.settings.catalog()
+        tag = uuid4().hex
+
+        def changed(request, replacement=False):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += "-" + tag
+            if replacement:
+                assets.spec["model_file_sha256"] = "0" * 64
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, changed)):
+            created = self.client.post("/v1/workflows", headers=self.header, json=REQUEST)
+        path = created.headers["location"]
+        with patch.object(Settings, "catalog", return_value=({}, lambda request: changed(request, True))):
+            self.assertEqual(self.client.post("/v1/workflows", headers=self.header, json=REQUEST).json()["id"],
+                             created.json()["id"])
+            self.assertEqual(self.client.post(path + "/advance").json()["error"]["code"], "ARTIFACT_UNAVAILABLE")
+        self.assertEqual(self.client.get(path).json()["stages"][0]["status"], "pending")

@@ -14,11 +14,15 @@ The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database
 
 ## Phase 3
 
-[Issue #9](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/9) and [PR #10](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/10) track cross-source Patient matching. The [runbook](PHASE_3.md) records the locked evaluation, PostgreSQL recovery checks and 25/100/500-patient benchmarks.
+[Issue #9](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/9) and [PR #10](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/10) tracked cross-source Patient matching. PR #10 merged at `34a9b81` and closed Issue #9. The [runbook](PHASE_3.md) records the locked evaluation, PostgreSQL recovery checks and 25/100/500-patient benchmarks.
+
+## Phase 4
+
+[Issue #11](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/11) tracks the local REST API, durable orchestration, and reproducible HTTP demo. The [Phase 4 runbook](PHASE_4.md) records the verified setup, recovery tests, and results.
 
 ## Next actions
 
-1. Review Phase 3 results and hosted checks.
+1. Review Phase 4 and verify hosted checks on the current PR head.
 2. Obtain separate approval before merging or beginning another milestone.
 
 See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).

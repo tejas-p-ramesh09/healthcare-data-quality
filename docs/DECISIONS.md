@@ -25,6 +25,10 @@ Quality policies run after ingestion on immutable batches. Use versioned Python 
 
 Match distinct published synthetic Patient batches with versioned demographic evidence, deterministic multi-pass blocking and exact and fitted statistical baselines. Keep recommendations separate from source data. The [Phase 3 runbook](PHASE_3.md) records fit and selection isolation, the locked evaluation, and transactional publication.
 
+## Phase 4 decisions
+
+Use a fixture-only FastAPI interface and an explicit one-stage advance operation. A PostgreSQL workflow records pinned input identities and reconciles completed underlying results after interruption. Migration, execution, and reporting credentials are separate. See the [Phase 4 runbook](PHASE_4.md) for the local trust boundary and operational results.
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |
