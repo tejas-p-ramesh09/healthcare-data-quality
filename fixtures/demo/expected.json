@@ -1,0 +1,15 @@
+{
+  "findings": {
+    "left": 0,
+    "right": 1
+  },
+  "candidates": 1,
+  "exact_suggestions": 1,
+  "statistical_suggestions": 1,
+  "no_candidate_left": 0,
+  "no_candidate_right": 1,
+  "manifests": {
+    "demo-source-a": "a9be110b560e4e76e13355dc536039195cac4781cc6683c29d67a12b628f6f0b",
+    "demo-source-b": "2d22eef7a0273a713ea431f8db1754bcda14bb1f68c87cffd99dd71aab831c0a"
+  }
+}

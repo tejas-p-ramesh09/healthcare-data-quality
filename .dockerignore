@@ -1,0 +1,14 @@
+*
+!pyproject.toml
+!uv.lock
+!src/
+!src/**
+!migrations/
+!migrations/**
+!config/
+!config/**
+!fixtures/
+!fixtures/**
+!scripts/
+!scripts/bootstrap_workflow.py
+**/__pycache__/

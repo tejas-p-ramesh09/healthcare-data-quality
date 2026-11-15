@@ -1,0 +1,35 @@
+{
+  "resourceType": "Bundle",
+  "type": "collection",
+  "entry": [
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "demo-b",
+        "name": [
+          {
+            "given": [
+              "Demo"
+            ],
+            "family": "Example"
+          }
+        ],
+        "birthDate": "1980-01-01"
+      }
+    },
+    {
+      "resource": {
+        "resourceType": "Patient",
+        "id": "demo-unmatched",
+        "name": [
+          {
+            "given": [
+              "Distinct"
+            ],
+            "family": "Sample"
+          }
+        ]
+      }
+    }
+  ]
+}

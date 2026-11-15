@@ -2,9 +2,9 @@
 
 An individual software engineering project that explores how integration engineers and data quality analysts can find and investigate problems in exchanged healthcare records. All patient data used by the project will be synthetic.
 
-The proposed workflow ingests Synthea-generated HL7 FHIR R4 records, preserves the source data, validates and normalizes selected resources, flags quality issues and possible duplicate patients, and produces auditable reports.
+The platform ingests synthetic FHIR R4 Bundles into PostgreSQL, runs versioned quality policies, and recommends possible duplicate patients with auditable evidence.
 
-Phase 0 locally verified repeatable patient IDs and birth dates across two small Synthea FHIR R4 runs and detected a controlled missing birth date. See the runbook for the commands, evidence, and limits.
+Start with the [local API demo](docs/PHASE_4.md). It uses checked-in synthetic fixtures and a fresh database without a Java or Synthea dependency.
 
 - [Project context and roadmap](docs/PROJECT_CONTEXT.md)
 - [Progress and next actions](docs/PROGRESS.md)

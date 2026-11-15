@@ -19,10 +19,15 @@ def revision():
     return h.hexdigest()
 
 
-def register(conn, left, right, model):
+def execution_identity(model):
     validate_model(model)
     config = {"model": model, "revision": revision()}
     digest = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
+    return config, digest
+
+
+def register(conn, left, right, model):
+    config, digest = execution_identity(model)
     with conn.transaction():
         if left == right or conn.execute(
             "SELECT count(*) FROM ingestion_batch WHERE id IN (%s,%s) AND status='published'",

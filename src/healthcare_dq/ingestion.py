@@ -1,5 +1,6 @@
 """Register, claim, and atomically publish one immutable ingestion batch."""
 
+import hashlib
 from collections import Counter
 from time import perf_counter
 
@@ -102,6 +103,9 @@ def fail(conn, batch_id, attempt, error, retryable):
 
 def ingest(conn, source, files, *, retry_batch=None):
     # The caller owns a fresh connection and closes it even when an outcome is uncertain.
+    for file in files:
+        if hashlib.sha256(file.data).hexdigest() != file.sha256:
+            raise InputError("INPUT_CHECKSUM_MISMATCH", file.path)
     if retry_batch is None:
         batch_id = register(conn, source, files)
     else:
@@ -133,11 +137,11 @@ def ingest(conn, source, files, *, retry_batch=None):
     try:
         with conn.transaction():
             publish(conn, batch_id, entries)
+            conn.execute("UPDATE ingestion_attempt SET status='published',finished_at=now() WHERE id=%s",
+                         (attempt,))
             conn.execute("""
                 UPDATE ingestion_batch SET status='published',published_at=now(),counts=%s WHERE id=%s
             """, (Jsonb(counts), batch_id))
-            conn.execute("UPDATE ingestion_attempt SET status='published',finished_at=now() WHERE id=%s",
-                         (attempt,))
     except (psycopg.OperationalError, psycopg.InterfaceError):
         # Includes unknown commit outcomes. Do not overwrite an outcome on this connection.
         raise

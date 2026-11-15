@@ -1,0 +1,22 @@
+{
+  "fixtures": {
+    "demo-source-a": {
+      "directory": "left",
+      "source": "demo-source-a",
+      "manifest": "a9be110b560e4e76e13355dc536039195cac4781cc6683c29d67a12b628f6f0b"
+    },
+    "demo-source-b": {
+      "directory": "right",
+      "source": "demo-source-b",
+      "manifest": "2d22eef7a0273a713ea431f8db1754bcda14bb1f68c87cffd99dd71aab831c0a"
+    }
+  },
+  "profiles": {
+    "demo-v1": {
+      "ruleset": "config/quality/ruleset-v1.json",
+      "model": "config/workflow/demo-model-v1.json",
+      "ruleset_file_sha256": "57b25279a8b9e2adfefdd572485e33074ad881cc40843b6d136e696a8c207234",
+      "model_file_sha256": "c036a2a55856fa4b3144314aa663c7ca7bd762bb29fbbdff4c139c4de3f7b848"
+    }
+  }
+}

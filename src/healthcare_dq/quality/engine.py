@@ -27,7 +27,11 @@ def digest(obj):
 
 
 def ruleset(path):
-    config = json.loads(path.read_text())
+    return parse_ruleset(path.read_bytes())
+
+
+def parse_ruleset(data):
+    config = json.loads(data)
     if (set(config) != {"contract", "encounter_grace_hours", "rules"}
             or type(config["contract"]) is not int or config["contract"] != 1
             or config["rules"] != {r.code: r.version for r in RULES}
