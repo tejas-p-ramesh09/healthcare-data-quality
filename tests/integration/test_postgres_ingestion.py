@@ -1,3 +1,4 @@
+import hashlib
 import os
 import unittest
 from concurrent.futures import ThreadPoolExecutor
@@ -71,8 +72,11 @@ class PostgresTests(unittest.TestCase):
         self.assertNotEqual(self.submit()["batch_id"], batch)
 
     def test_invalid_json_and_unresolved_link_are_durable_and_sanitized(self):
-        self.files = [InputFile("invalid.json", b'{"name":"Secret Fixture","birthDate":"1980-01-01"',
-                                "0" * 64)]
+        invalid = b'{"name":"Secret Fixture","birthDate":"1980-01-01"'
+        self.files = [InputFile("invalid.json", invalid, "0" * 64)]
+        with self.assertRaisesRegex(InputError, "INPUT_CHECKSUM_MISMATCH"):
+            self.submit()
+        self.files = [InputFile("invalid.json", invalid, hashlib.sha256(invalid).hexdigest())]
         result = self.submit()
         self.assertEqual(result["attempts"][0]["code"], "INVALID_JSON")
         self.assertNotIn("Secret Fixture", str(result))
