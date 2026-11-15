@@ -1,0 +1,56 @@
+{
+  "version": 1,
+  "default": "exact",
+  "statistical": {
+    "weights": {
+      "given": {
+        "exact": 1,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      },
+      "family": {
+        "exact": 1,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      },
+      "birth": {
+        "exact": 1,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      },
+      "phone": {
+        "exact": 0,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      },
+      "street": {
+        "exact": 0,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      },
+      "zip": {
+        "exact": 0,
+        "close": 0,
+        "conflict": 0,
+        "missing": 0
+      }
+    }
+  },
+  "policies": {
+    "exact": {
+      "low": 1,
+      "high": 1,
+      "margin": 0
+    },
+    "statistical": {
+      "low": 2,
+      "high": 3,
+      "margin": 0
+    }
+  }
+}
