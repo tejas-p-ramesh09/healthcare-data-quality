@@ -58,6 +58,8 @@ FOR EACH ROW EXECUTE FUNCTION capture_workflow_attempt();
 CREATE FUNCTION workflow_attempt_guard() RETURNS trigger LANGUAGE plpgsql AS $$
 DECLARE parent_status text;
         underlying_status text;
+        failure_code text;
+        failure_retryable boolean;
 BEGIN
     SELECT status INTO parent_status FROM workflow_stage
     WHERE workflow_id=NEW.workflow_id AND step=NEW.step FOR UPDATE NOWAIT;
@@ -73,14 +75,25 @@ BEGIN
            AND num_nonnulls(NEW.ingestion_attempt_id,NEW.quality_attempt_id,NEW.matching_attempt_id)=1
            AND NEW.finished_at IS NULL AND NEW.code IS NULL AND NEW.retryable IS NULL THEN RETURN NEW; END IF;
         IF OLD.ingestion_attempt_id IS NOT NULL THEN
-            SELECT status INTO STRICT underlying_status FROM ingestion_attempt WHERE id=OLD.ingestion_attempt_id;
+            SELECT status,error_code,coalesce(retryable,false) INTO STRICT
+                underlying_status,failure_code,failure_retryable
+            FROM ingestion_attempt WHERE id=OLD.ingestion_attempt_id;
         ELSIF OLD.quality_attempt_id IS NOT NULL THEN
-            SELECT status INTO STRICT underlying_status FROM quality_attempt WHERE id=OLD.quality_attempt_id;
+            SELECT status,error_code,true INTO STRICT underlying_status,failure_code,failure_retryable
+            FROM quality_attempt WHERE id=OLD.quality_attempt_id;
         ELSIF OLD.matching_attempt_id IS NOT NULL THEN
-            SELECT status INTO STRICT underlying_status FROM matching_attempt WHERE id=OLD.matching_attempt_id;
+            SELECT status,error_code,true INTO STRICT underlying_status,failure_code,failure_retryable
+            FROM matching_attempt WHERE id=OLD.matching_attempt_id;
         END IF;
-        IF underlying_status='failed' AND NEW.status<>'failed' THEN
-            RAISE EXCEPTION 'Workflow attempt has a durable underlying failure' USING ERRCODE='23514';
+        IF (underlying_status='failed' OR NEW.status='failed') AND (
+            underlying_status IS DISTINCT FROM 'failed' OR NEW.status<>'failed'
+            OR NEW.code IS DISTINCT FROM coalesce(failure_code,'STAGE_EXECUTION_FAILED')
+            OR NEW.retryable IS DISTINCT FROM failure_retryable
+        ) THEN
+            RAISE EXCEPTION 'Workflow attempt does not reflect durable failure' USING ERRCODE='23514';
+        END IF;
+        IF underlying_status IN ('completed','published') AND NEW.status<>'completed' THEN
+            RAISE EXCEPTION 'Workflow attempt has a durable underlying success' USING ERRCODE='23514';
         END IF;
         IF NEW.finished_at IS NOT NULL AND (
             (NEW.status='completed' AND NEW.code IS NULL AND NEW.retryable IS NULL)

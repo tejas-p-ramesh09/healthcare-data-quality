@@ -234,16 +234,19 @@ class WorkflowAPI(unittest.TestCase):
 
         from healthcare_dq.api.config import verify_connection
 
-        for grant, revoke in (
-            ("GRANT SELECT(payload) ON raw_resource TO workflow_reporter",
+        for role, grant, revoke in (
+            ("workflow_reporter", "GRANT SELECT(payload) ON raw_resource TO workflow_reporter",
              "REVOKE SELECT(payload) ON raw_resource FROM workflow_reporter"),
-            ("GRANT pg_read_all_data TO workflow_reporter", "REVOKE pg_read_all_data FROM workflow_reporter"),
+            ("workflow_reporter", "GRANT pg_read_all_data TO workflow_reporter",
+             "REVOKE pg_read_all_data FROM workflow_reporter"),
+            ("workflow_executor", "GRANT UPDATE(payload) ON raw_resource TO workflow_executor",
+             "REVOKE UPDATE(payload) ON raw_resource FROM workflow_executor"),
         ):
             with connect("TEST_DATABASE_URL") as admin, admin.transaction():
                 admin.execute(grant)
-                admin.execute("SET LOCAL ROLE workflow_reporter")
+                admin.execute("SET LOCAL ROLE " + role)
                 with self.assertRaisesRegex(ValueError, "Invalid database privileges"):
-                    verify_connection(admin, "workflow_reporter", injected=True)
+                    verify_connection(admin, role, injected=True)
                 admin.execute("RESET ROLE")
                 admin.execute(revoke)
 

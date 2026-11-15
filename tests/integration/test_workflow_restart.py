@@ -12,6 +12,7 @@ from tempfile import TemporaryDirectory
 from uuid import uuid4
 
 import httpx
+from psycopg.errors import CheckViolation
 
 from healthcare_dq.db import connect, migrate
 from tests.integration.test_workflow_api import HEADERS, REQUEST
@@ -171,6 +172,14 @@ class WorkflowRestart(unittest.TestCase):
                             self.assertEqual(client.get(path).json()["status"], "running")
                             self.assertEqual(is_published(), 0)
                             stop(process)
+
+                            with connect("TEST_DATABASE_URL") as c:
+                                c.execute("SET ROLE workflow_executor")
+                                with self.assertRaisesRegex(CheckViolation, "durable failure"):
+                                    c.execute("""UPDATE workflow_stage_attempt
+                                        SET status='failed',code=%s,retryable=%s,finished_at=now()
+                                        WHERE workflow_id=%s AND status='running'
+                                    """, (code, not retryable, created.json()["id"]))
 
                             process, _, _ = launch("resume")
                             response = client.post(path + "/advance")

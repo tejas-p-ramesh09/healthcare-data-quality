@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from dataclasses import dataclass
 
 import psycopg
+from psycopg.types.json import Jsonb
 
 from healthcare_dq.db import ROOT, connect
 from healthcare_dq.workflow.catalog import load_catalog
@@ -13,6 +14,18 @@ REPORT_VIEWS = [
     "workflow_report", "workflow_stage_report", "workflow_batch_report", "workflow_file_report",
     "workflow_finding_report", "workflow_recommendation_report", "workflow_schema_ready",
 ]
+
+
+EXECUTOR_UPDATE_FIELDS = {
+    "ingestion_batch": ["status", "published_at", "counts"],
+    "ingestion_attempt": ["status", "finished_at", "retryable", "error_code"],
+    "quality_run": ["status", "counts", "completed_at"],
+    "quality_attempt": ["status", "finished_at", "error_code"],
+    "matching_run": ["status", "counts", "finished_at"],
+    "matching_attempt": ["status", "finished_at", "error_code"],
+    "workflow_stage": ["status", "expected", "batch_id", "quality_id", "matching_id", "updated_at"],
+    "workflow_stage_attempt": ["status", "code", "retryable", "finished_at"],
+}
 
 
 def verify_connection(conn, role, injected):
@@ -59,11 +72,15 @@ def verify_connection(conn, role, injected):
     else:
         ready, = conn.execute("""
             SELECT pg_has_role('ingest','USAGE') AND has_table_privilege('raw_resource','SELECT')
-              AND has_column_privilege('workflow_stage','status','UPDATE')
-              AND has_column_privilege('workflow_stage_attempt','status','UPDATE')
-              AND NOT has_table_privilege('workflow_stage','DELETE,TRUNCATE,TRIGGER')
-              AND NOT has_table_privilege('raw_resource','UPDATE,DELETE,TRUNCATE,TRIGGER')
-        """).fetchone()
+              AND NOT EXISTS (
+                  SELECT FROM pg_class c JOIN pg_namespace n ON n.oid=c.relnamespace
+                  LEFT JOIN pg_attribute a ON a.attrelid=c.oid AND a.attnum>0 AND NOT a.attisdropped
+                  WHERE n.nspname='public' AND c.relkind IN ('r','p','v','m','f')
+                    AND (has_table_privilege(c.oid,'DELETE,TRUNCATE,TRIGGER,MAINTAIN')
+                         OR (a.attnum IS NOT NULL AND has_column_privilege(c.oid,a.attnum,'UPDATE')
+                             IS DISTINCT FROM coalesce((%s::jsonb->c.relname) ? a.attname::text,false)))
+              )
+        """, (Jsonb(EXECUTOR_UPDATE_FIELDS),)).fetchone()
         if not ready:
             raise ValueError("Invalid database privileges")
 
