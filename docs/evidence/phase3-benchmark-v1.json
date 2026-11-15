@@ -1,0 +1,338 @@
+{
+  "25": [
+    {
+      "comparisons_per_second": 115463.94368281514,
+      "counts": {
+        "block_emissions": 68,
+        "candidates": 21,
+        "left": 25,
+        "no_candidate_left": 4,
+        "no_candidate_right": 4,
+        "right": 25
+      },
+      "elapsed": 0.037420958979055285,
+      "peak_rss_bytes": 43270144,
+      "reduction": 0.9664,
+      "replay": 0.00553404213860631,
+      "seconds": {
+        "block": 0.0001994590274989605,
+        "decision": 4.437402822077274e-05,
+        "publish": 0.009584167040884495,
+        "read": 0.003650916973128915,
+        "score": 0.0001818749587982893
+      }
+    },
+    {
+      "comparisons_per_second": 113334.49759745873,
+      "counts": {
+        "block_emissions": 68,
+        "candidates": 21,
+        "left": 25,
+        "no_candidate_left": 4,
+        "no_candidate_right": 4,
+        "right": 25
+      },
+      "elapsed": 0.033982541877776384,
+      "peak_rss_bytes": 43286528,
+      "reduction": 0.9664,
+      "replay": 0.006223415955901146,
+      "seconds": {
+        "block": 0.0002051659394055605,
+        "decision": 4.404177889227867e-05,
+        "publish": 0.012874000007286668,
+        "read": 0.002907166024670005,
+        "score": 0.00018529221415519714
+      }
+    },
+    {
+      "comparisons_per_second": 103703.80832672208,
+      "counts": {
+        "block_emissions": 68,
+        "candidates": 21,
+        "left": 25,
+        "no_candidate_left": 4,
+        "no_candidate_right": 4,
+        "right": 25
+      },
+      "elapsed": 0.032681250013411045,
+      "peak_rss_bytes": 43122688,
+      "reduction": 0.9664,
+      "replay": 0.008005334064364433,
+      "seconds": {
+        "block": 0.00023170909844338894,
+        "decision": 5.087512545287609e-05,
+        "publish": 0.010996665805578232,
+        "read": 0.003197333076968789,
+        "score": 0.00020249979570508003
+      }
+    },
+    {
+      "comparisons_per_second": 103342.35426434396,
+      "counts": {
+        "block_emissions": 68,
+        "candidates": 21,
+        "left": 25,
+        "no_candidate_left": 4,
+        "no_candidate_right": 4,
+        "right": 25
+      },
+      "elapsed": 0.02978508290834725,
+      "peak_rss_bytes": 43237376,
+      "reduction": 0.9664,
+      "replay": 0.00793645903468132,
+      "seconds": {
+        "block": 0.00022062496282160282,
+        "decision": 5.045789293944836e-05,
+        "publish": 0.009961667004972696,
+        "read": 0.002936417004093528,
+        "score": 0.0002032080665230751
+      }
+    },
+    {
+      "comparisons_per_second": 101920.92744399645,
+      "counts": {
+        "block_emissions": 68,
+        "candidates": 21,
+        "left": 25,
+        "no_candidate_left": 4,
+        "no_candidate_right": 4,
+        "right": 25
+      },
+      "elapsed": 0.029708208050578833,
+      "peak_rss_bytes": 43155456,
+      "reduction": 0.9664,
+      "replay": 0.006384624866768718,
+      "seconds": {
+        "block": 0.00022533279843628407,
+        "decision": 5.1042065024375916e-05,
+        "publish": 0.011732624843716621,
+        "read": 0.002846750197932124,
+        "score": 0.00020604208111763
+      }
+    }
+  ],
+  "100": [
+    {
+      "comparisons_per_second": 166185.95891797275,
+      "counts": {
+        "block_emissions": 266,
+        "candidates": 84,
+        "left": 100,
+        "no_candidate_left": 16,
+        "no_candidate_right": 16,
+        "right": 100
+      },
+      "elapsed": 0.03576633310876787,
+      "peak_rss_bytes": 43794432,
+      "reduction": 0.9916,
+      "replay": 0.00683241686783731,
+      "seconds": {
+        "block": 0.0004427500534802675,
+        "decision": 0.0001455000601708889,
+        "publish": 0.015001124935224652,
+        "read": 0.0051929999608546495,
+        "score": 0.0005054578650742769
+      }
+    },
+    {
+      "comparisons_per_second": 182229.1407536115,
+      "counts": {
+        "block_emissions": 266,
+        "candidates": 84,
+        "left": 100,
+        "no_candidate_left": 16,
+        "no_candidate_right": 16,
+        "right": 100
+      },
+      "elapsed": 0.03631541691720486,
+      "peak_rss_bytes": 43646976,
+      "reduction": 0.9916,
+      "replay": 0.005747209070250392,
+      "seconds": {
+        "block": 0.00042437505908310413,
+        "decision": 0.00013308366760611534,
+        "publish": 0.018652208149433136,
+        "read": 0.004593833116814494,
+        "score": 0.0004609581083059311
+      }
+    },
+    {
+      "comparisons_per_second": 184496.9114067498,
+      "counts": {
+        "block_emissions": 266,
+        "candidates": 84,
+        "left": 100,
+        "no_candidate_left": 16,
+        "no_candidate_right": 16,
+        "right": 100
+      },
+      "elapsed": 0.05069416598416865,
+      "peak_rss_bytes": 43630592,
+      "reduction": 0.9916,
+      "replay": 0.006199917057529092,
+      "seconds": {
+        "block": 0.00041837478056550026,
+        "decision": 0.00013487506657838821,
+        "publish": 0.020840249955654144,
+        "read": 0.008022041991353035,
+        "score": 0.0004552921745926142
+      }
+    },
+    {
+      "comparisons_per_second": 177558.69593616933,
+      "counts": {
+        "block_emissions": 266,
+        "candidates": 84,
+        "left": 100,
+        "no_candidate_left": 16,
+        "no_candidate_right": 16,
+        "right": 100
+      },
+      "elapsed": 0.04106620792299509,
+      "peak_rss_bytes": 43761664,
+      "reduction": 0.9916,
+      "replay": 0.006110124988481402,
+      "seconds": {
+        "block": 0.00043287500739097595,
+        "decision": 0.00014154217205941677,
+        "publish": 0.017255541868507862,
+        "read": 0.0066880828235298395,
+        "score": 0.00047308299690485
+      }
+    },
+    {
+      "comparisons_per_second": 179391.30049688756,
+      "counts": {
+        "block_emissions": 266,
+        "candidates": 84,
+        "left": 100,
+        "no_candidate_left": 16,
+        "no_candidate_right": 16,
+        "right": 100
+      },
+      "elapsed": 0.05513570783659816,
+      "peak_rss_bytes": 43843584,
+      "reduction": 0.9916,
+      "replay": 0.005939750000834465,
+      "seconds": {
+        "block": 0.0004326668567955494,
+        "decision": 0.00013616587966680527,
+        "publish": 0.01921962504275143,
+        "read": 0.005618625087663531,
+        "score": 0.00046825013123452663
+      }
+    }
+  ],
+  "500": [
+    {
+      "comparisons_per_second": 167254.30922432098,
+      "counts": {
+        "block_emissions": 1310,
+        "candidates": 423,
+        "left": 500,
+        "no_candidate_left": 81,
+        "no_candidate_right": 83,
+        "right": 500
+      },
+      "elapsed": 0.10506066610105336,
+      "peak_rss_bytes": 46350336,
+      "reduction": 0.998308,
+      "replay": 0.006334750214591622,
+      "seconds": {
+        "block": 0.0025919589679688215,
+        "decision": 0.0006575833540409803,
+        "publish": 0.04187029181048274,
+        "read": 0.034125000005587935,
+        "score": 0.0025290828198194504
+      }
+    },
+    {
+      "comparisons_per_second": 169655.21253630723,
+      "counts": {
+        "block_emissions": 1310,
+        "candidates": 423,
+        "left": 500,
+        "no_candidate_left": 81,
+        "no_candidate_right": 83,
+        "right": 500
+      },
+      "elapsed": 0.10180562501773238,
+      "peak_rss_bytes": 46481408,
+      "reduction": 0.998308,
+      "replay": 0.006473833927884698,
+      "seconds": {
+        "block": 0.002435874892398715,
+        "decision": 0.0006592909339815378,
+        "publish": 0.04139691707678139,
+        "read": 0.03864966705441475,
+        "score": 0.0024932920932769775
+      }
+    },
+    {
+      "comparisons_per_second": 175394.36759740367,
+      "counts": {
+        "block_emissions": 1310,
+        "candidates": 423,
+        "left": 500,
+        "no_candidate_left": 81,
+        "no_candidate_right": 83,
+        "right": 500
+      },
+      "elapsed": 0.1051709579769522,
+      "peak_rss_bytes": 46399488,
+      "reduction": 0.998308,
+      "replay": 0.007500916952267289,
+      "seconds": {
+        "block": 0.0023843329399824142,
+        "decision": 0.0006498340517282486,
+        "publish": 0.044515375047922134,
+        "read": 0.03538041585125029,
+        "score": 0.002411708002910018
+      }
+    },
+    {
+      "comparisons_per_second": 171683.635393283,
+      "counts": {
+        "block_emissions": 1310,
+        "candidates": 423,
+        "left": 500,
+        "no_candidate_left": 81,
+        "no_candidate_right": 83,
+        "right": 500
+      },
+      "elapsed": 0.10432833293452859,
+      "peak_rss_bytes": 46530560,
+      "reduction": 0.998308,
+      "replay": 0.006785999983549118,
+      "seconds": {
+        "block": 0.0024776249192655087,
+        "decision": 0.0006642069201916456,
+        "publish": 0.038620584178715944,
+        "read": 0.03516491688787937,
+        "score": 0.0024638341274112463
+      }
+    },
+    {
+      "comparisons_per_second": 173716.62190849212,
+      "counts": {
+        "block_emissions": 1310,
+        "candidates": 423,
+        "left": 500,
+        "no_candidate_left": 81,
+        "no_candidate_right": 83,
+        "right": 500
+      },
+      "elapsed": 0.10582641698420048,
+      "peak_rss_bytes": 46350336,
+      "reduction": 0.998308,
+      "replay": 0.006012458121404052,
+      "seconds": {
+        "block": 0.0023935409262776375,
+        "decision": 0.0006512089166790247,
+        "publish": 0.042228166945278645,
+        "read": 0.035070667043328285,
+        "score": 0.0024350001476705074
+      }
+    }
+  ]
+}

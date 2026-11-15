@@ -10,11 +10,15 @@ The owner approved one approval per milestone for the actions explicitly listed 
 
 ## Phase 2
 
-The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database recovery tests, baseline findings, frozen mutation evaluation, and validation benchmarks. [Issue #7](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/7) tracks the milestone.
+The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database recovery tests, baseline findings, frozen mutation evaluation, and validation benchmarks. [Issue #7](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/7) tracked the milestone. PR #8 merged into main at `de4acd6`, closing Issue #7.
+
+## Phase 3
+
+[Issue #9](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/9) and [PR #10](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/10) track cross-source Patient matching. The [runbook](PHASE_3.md) records the locked evaluation, PostgreSQL recovery checks and 25/100/500-patient benchmarks.
 
 ## Next actions
 
-1. Review Phase 2 evidence and hosted checks.
+1. Review Phase 3 results and hosted checks.
 2. Obtain separate approval before merging or beginning another milestone.
 
 See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).

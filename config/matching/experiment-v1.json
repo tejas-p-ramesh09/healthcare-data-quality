@@ -1,0 +1,13 @@
+{
+  "synthea": "4.0.0",
+  "source_request": 320,
+  "source_seed": 303101,
+  "clinician_seed": 303102,
+  "scale_request": 500,
+  "scale_seed": 303201,
+  "scale_clinician_seed": 303202,
+  "source_manifest": "71699f3c38f2f7188253f145564d10956741994436c7d47b6cd52e4b76d37076",
+  "split_seed": 303103,
+  "benchmark_sizes": [25, 100, 500],
+  "trials": 5
+}

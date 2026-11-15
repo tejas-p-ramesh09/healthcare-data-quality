@@ -1,0 +1,383 @@
+{
+  "cohort_sha256": "b9d365cb6aa373ab1809bd2138480c9710b7fa02790ef5d7610a56760ccca1f3",
+  "final": {
+    "blocking_emissions": 120,
+    "comparisons": 47,
+    "exact": {
+      "blocked_positives": 5,
+      "blocking_recall": 0.875,
+      "candidate_count": 47,
+      "candidate_only": {
+        "f1": 0.6,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 20,
+        "fp": 0,
+        "miss_rate": 0.5714285714285714,
+        "precision": 1.0,
+        "recall": 0.42857142857142855,
+        "tn": 12,
+        "tp": 15
+      },
+      "candidate_reduction": 0.9826183431952663,
+      "dispositions": {
+        "suggested_match": 15,
+        "unlikely_match": 32
+      },
+      "examples": {
+        "false_suggestion_hard_negative_count": 0,
+        "missed_families": [
+          "combined",
+          "partial_birth",
+          "surname",
+          "typo"
+        ]
+      },
+      "families": {
+        "combined": {
+          "blocked_out": 5,
+          "support": 6,
+          "unlikely_match": 1
+        },
+        "contact_change": {
+          "suggested_match": 6,
+          "support": 6
+        },
+        "format": {
+          "suggested_match": 7,
+          "support": 7
+        },
+        "partial_birth": {
+          "support": 7,
+          "unlikely_match": 7
+        },
+        "surname": {
+          "support": 7,
+          "unlikely_match": 7
+        },
+        "typo": {
+          "suggested_match": 2,
+          "support": 7,
+          "unlikely_match": 5
+        }
+      },
+      "full": {
+        "f1": 0.5454545454545454,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 25,
+        "fp": 0,
+        "miss_rate": 0.625,
+        "precision": 1.0,
+        "recall": 0.375,
+        "tn": 2664,
+        "tp": 15
+      },
+      "hard_negatives": {
+        "unlikely_match": 12
+      },
+      "no_candidate_left": 13,
+      "no_candidate_right": 13,
+      "possible_pairs": 2704,
+      "unmatched_left": 12,
+      "unmatched_right": 12,
+      "unmatched_suggested_left": 0,
+      "unmatched_suggested_right": 0
+    },
+    "exhaustive_exact": {
+      "blocked_positives": 0,
+      "blocking_recall": 1.0,
+      "candidate_count": 2704,
+      "candidate_only": {
+        "f1": 0.5454545454545454,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 25,
+        "fp": 0,
+        "miss_rate": 0.625,
+        "precision": 1.0,
+        "recall": 0.375,
+        "tn": 2664,
+        "tp": 15
+      },
+      "candidate_reduction": 0.0,
+      "dispositions": {
+        "suggested_match": 15,
+        "unlikely_match": 2689
+      },
+      "examples": {
+        "false_suggestion_hard_negative_count": 0,
+        "missed_families": [
+          "combined",
+          "partial_birth",
+          "surname",
+          "typo"
+        ]
+      },
+      "families": {
+        "combined": {
+          "support": 6,
+          "unlikely_match": 6
+        },
+        "contact_change": {
+          "suggested_match": 6,
+          "support": 6
+        },
+        "format": {
+          "suggested_match": 7,
+          "support": 7
+        },
+        "partial_birth": {
+          "support": 7,
+          "unlikely_match": 7
+        },
+        "surname": {
+          "support": 7,
+          "unlikely_match": 7
+        },
+        "typo": {
+          "suggested_match": 2,
+          "support": 7,
+          "unlikely_match": 5
+        }
+      },
+      "full": {
+        "f1": 0.5454545454545454,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 25,
+        "fp": 0,
+        "miss_rate": 0.625,
+        "precision": 1.0,
+        "recall": 0.375,
+        "tn": 2664,
+        "tp": 15
+      },
+      "hard_negatives": {
+        "unlikely_match": 12
+      },
+      "no_candidate_left": 0,
+      "no_candidate_right": 0,
+      "possible_pairs": 2704,
+      "unmatched_left": 12,
+      "unmatched_right": 12,
+      "unmatched_suggested_left": 0,
+      "unmatched_suggested_right": 0
+    },
+    "statistical": {
+      "blocked_positives": 5,
+      "blocking_recall": 0.875,
+      "candidate_count": 47,
+      "candidate_only": {
+        "f1": 1.0,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 0,
+        "fp": 0,
+        "miss_rate": 0.0,
+        "precision": 1.0,
+        "recall": 1.0,
+        "tn": 12,
+        "tp": 35
+      },
+      "candidate_reduction": 0.9826183431952663,
+      "dispositions": {
+        "suggested_match": 35,
+        "unlikely_match": 12
+      },
+      "examples": {
+        "false_suggestion_hard_negative_count": 0,
+        "missed_families": [
+          "combined"
+        ]
+      },
+      "families": {
+        "combined": {
+          "blocked_out": 5,
+          "suggested_match": 1,
+          "support": 6
+        },
+        "contact_change": {
+          "suggested_match": 6,
+          "support": 6
+        },
+        "format": {
+          "suggested_match": 7,
+          "support": 7
+        },
+        "partial_birth": {
+          "suggested_match": 7,
+          "support": 7
+        },
+        "surname": {
+          "suggested_match": 7,
+          "support": 7
+        },
+        "typo": {
+          "suggested_match": 7,
+          "support": 7
+        }
+      },
+      "full": {
+        "f1": 0.9333333333333333,
+        "false_match_rate": 0.0,
+        "false_suggestion_rate": 0.0,
+        "fn": 5,
+        "fp": 0,
+        "miss_rate": 0.125,
+        "precision": 1.0,
+        "recall": 0.875,
+        "tn": 2664,
+        "tp": 35
+      },
+      "hard_negatives": {
+        "unlikely_match": 12
+      },
+      "no_candidate_left": 13,
+      "no_candidate_right": 13,
+      "possible_pairs": 2704,
+      "unmatched_left": 12,
+      "unmatched_right": 12,
+      "unmatched_suggested_left": 0,
+      "unmatched_suggested_right": 0
+    }
+  },
+  "model": {
+    "default": "statistical",
+    "policies": {
+      "exact": {
+        "high": 1,
+        "low": 1,
+        "margin": 0
+      },
+      "statistical": {
+        "high": 5.42067691,
+        "low": 5.42067691,
+        "margin": 0
+      }
+    },
+    "statistical": {
+      "levels": {
+        "False": {
+          "birth": {
+            "close": 0,
+            "conflict": 34,
+            "exact": 0,
+            "missing": 5
+          },
+          "family": {
+            "close": 0,
+            "conflict": 39,
+            "exact": 0,
+            "missing": 0
+          },
+          "given": {
+            "close": 0,
+            "conflict": 39,
+            "exact": 0,
+            "missing": 0
+          },
+          "phone": {
+            "close": 0,
+            "conflict": 1,
+            "exact": 38,
+            "missing": 0
+          },
+          "street": {
+            "close": 0,
+            "conflict": 34,
+            "exact": 0,
+            "missing": 5
+          },
+          "zip": {
+            "close": 0,
+            "conflict": 33,
+            "exact": 1,
+            "missing": 5
+          }
+        },
+        "True": {
+          "birth": {
+            "close": 19,
+            "conflict": 0,
+            "exact": 78,
+            "missing": 5
+          },
+          "family": {
+            "close": 0,
+            "conflict": 19,
+            "exact": 83,
+            "missing": 0
+          },
+          "given": {
+            "close": 14,
+            "conflict": 2,
+            "exact": 86,
+            "missing": 0
+          },
+          "phone": {
+            "close": 0,
+            "conflict": 0,
+            "exact": 88,
+            "missing": 14
+          },
+          "street": {
+            "close": 0,
+            "conflict": 0,
+            "exact": 83,
+            "missing": 19
+          },
+          "zip": {
+            "close": 0,
+            "conflict": 0,
+            "exact": 83,
+            "missing": 19
+          }
+        }
+      },
+      "support": {
+        "False": 39,
+        "True": 102
+      },
+      "weights": {
+        "birth": {
+          "close": 2.0934933,
+          "conflict": -4.45758704,
+          "exact": 3.46720887,
+          "missing": -0.90223898
+        },
+        "family": {
+          "close": -0.90223898,
+          "conflict": -1.59538616,
+          "exact": 3.52857782,
+          "missing": -0.90223898
+        },
+        "given": {
+          "close": 1.80581122,
+          "conflict": -3.49250614,
+          "exact": 3.56366914,
+          "missing": -0.90223898
+        },
+        "phone": {
+          "close": -0.90223898,
+          "conflict": -1.59538616,
+          "exact": -0.07716425,
+          "missing": 1.80581122
+        },
+        "street": {
+          "close": -0.90223898,
+          "conflict": -4.45758704,
+          "exact": 3.52857782,
+          "missing": 0.30173383
+        },
+        "zip": {
+          "close": -0.90223898,
+          "conflict": -4.4285995,
+          "exact": 2.83543064,
+          "missing": 0.30173383
+        }
+      }
+    },
+    "version": 1
+  }
+}
