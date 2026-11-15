@@ -133,11 +133,11 @@ def ingest(conn, source, files, *, retry_batch=None):
     try:
         with conn.transaction():
             publish(conn, batch_id, entries)
+            conn.execute("UPDATE ingestion_attempt SET status='published',finished_at=now() WHERE id=%s",
+                         (attempt,))
             conn.execute("""
                 UPDATE ingestion_batch SET status='published',published_at=now(),counts=%s WHERE id=%s
             """, (Jsonb(counts), batch_id))
-            conn.execute("UPDATE ingestion_attempt SET status='published',finished_at=now() WHERE id=%s",
-                         (attempt,))
     except (psycopg.OperationalError, psycopg.InterfaceError):
         # Includes unknown commit outcomes. Do not overwrite an outcome on this connection.
         raise
