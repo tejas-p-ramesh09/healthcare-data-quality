@@ -2,10 +2,19 @@
 name = "healthcare-dq"
 version = "0.1.0"
 requires-python = ">=3.13,<3.14"
-dependencies = ["psycopg[binary]>=3.2,<4", "simplejson>=3.20,<4"]
+dependencies = [
+    "fastapi>=0.163.0",
+    "psycopg[binary]>=3.2,<4",
+    "pydantic>=2.14.3",
+    "simplejson>=3.20,<4",
+    "uvicorn>=0.54.0",
+]
 
 [dependency-groups]
-dev = ["ruff>=0.12,<1"]
+dev = [
+    "httpx>=0.28.1",
+    "ruff>=0.12,<1",
+]
 
 [tool.ruff]
 line-length = 110

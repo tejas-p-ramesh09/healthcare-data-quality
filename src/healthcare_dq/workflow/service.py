@@ -1,6 +1,7 @@
 """Explicit, session-owned advancement of a durable workflow."""
 
 import logging
+from time import perf_counter
 
 from psycopg.rows import dict_row
 from psycopg.types.json import Jsonb
@@ -127,10 +128,14 @@ def advance(wid, resolve, connection=connect):
                 link(owner, wid, step, found)
                 return
         LOG.info("stage_started", extra={"workflow_id": wid, "stage": stages.NAMES[step], "attempt": attempt})
+        started = perf_counter()
         # Stage connections are short-lived and own their existing per-stage locks.
         with connection() as runner:
             result = stages.execute(runner, step, expected, assets)
         after_execute()
+        LOG.info("stage_returned", extra={"workflow_id": wid, "stage": stages.NAMES[step],
+                                         "attempt": attempt, "outcome": result["status"],
+                                         "duration_ms": round((perf_counter() - started) * 1000, 3)})
         with owner.transaction():
             found = stages.lookup(owner, step, expected)
             if found is not None:
@@ -139,7 +144,14 @@ def advance(wid, resolve, connection=connect):
             busy = result["status"] == "busy"
             last = (result.get("attempts") or [{}])[-1]
             retryable = busy or step >= 2 or bool(last.get("retryable"))
-            code = "STAGE_BUSY" if busy else "STAGE_EXECUTION_FAILED"
+            if busy:
+                code = "STAGE_BUSY"
+            elif step == 4 and isinstance(last, (tuple, list)):
+                code = last[2] or "STAGE_EXECUTION_FAILED"
+            elif isinstance(last, dict):
+                code = last.get("error_code") or last.get("code") or "STAGE_EXECUTION_FAILED"
+            else:
+                code = "STAGE_EXECUTION_FAILED"
             close_attempt(owner, wid, step, "deferred" if busy else "failed", code, retryable)
             owner.execute("""UPDATE workflow_stage SET status=%s,updated_at=now()
                              WHERE workflow_id=%s AND step=%s""",
