@@ -184,8 +184,7 @@ class WorkflowAPI(unittest.TestCase):
                 conn.execute("""UPDATE workflow_stage SET status='running',expected=%s
                         WHERE workflow_id=%s AND step=4""", (Jsonb(["wrong"]), wid))
             for _ in range(3):
-                failure = {"status": "failed", "attempts": [[1, "failed", "MATCHING_FAILED"]]}
-                with patch.object(stages, "execute", return_value=failure):
+                with patch.object(stages.matching, "rank", side_effect=ValueError("injected failure")):
                     result = self.client.post(path + "/advance")
                 self.assertEqual(result.json()["stages"][4]["failure"]["code"], "MATCHING_FAILED")
             self.assertEqual(self.client.post(path + "/advance").json()["error"]["code"],
@@ -214,3 +213,85 @@ class WorkflowAPI(unittest.TestCase):
                              created.json()["id"])
             self.assertEqual(self.client.post(path + "/advance").json()["error"]["code"], "ARTIFACT_UNAVAILABLE")
         self.assertEqual(self.client.get(path).json()["stages"][0]["status"], "pending")
+
+    def test_database_roles_fail_closed(self):
+        for reader, executor in (
+            ("workflow_executor", "workflow_reporter"),
+            ("workflow_executor", "workflow_executor"),
+            (None, "workflow_executor"),
+        ):
+            with self.subTest(reader=reader, executor=executor):
+                def report(reader=reader):
+                    return restricted(reader) if reader else connect("TEST_DATABASE_URL")
+
+                settings = Settings(TOKEN, reader=report, executor=lambda executor=executor: restricted(executor))
+                with TestClient(create_app(settings), base_url="http://localhost", headers=HEADERS) as client:
+                    for path in ("/health/ready", "/v1/workflows"):
+                        result = client.get(path)
+                        self.assertEqual(result.status_code, 503)
+                        self.assertEqual(result.json()["error"]["code"], "SERVICE_NOT_READY")
+                        self.assertNotIn("workflow_executor", result.text)
+
+        from healthcare_dq.api.config import verify_connection
+
+        for grant, revoke in (
+            ("GRANT SELECT(payload) ON raw_resource TO workflow_reporter",
+             "REVOKE SELECT(payload) ON raw_resource FROM workflow_reporter"),
+            ("GRANT pg_read_all_data TO workflow_reporter", "REVOKE pg_read_all_data FROM workflow_reporter"),
+        ):
+            with connect("TEST_DATABASE_URL") as admin, admin.transaction():
+                admin.execute(grant)
+                admin.execute("SET LOCAL ROLE workflow_reporter")
+                with self.assertRaisesRegex(ValueError, "Invalid database privileges"):
+                    verify_connection(admin, "workflow_reporter", injected=True)
+                admin.execute("RESET ROLE")
+                admin.execute(revoke)
+
+    def test_workflow_attempt_journal_rejects_unauthorized_transitions(self):
+        _, original = self.settings.catalog()
+
+        def resolve(request):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += "-" + self.header["Idempotency-Key"]
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, resolve)):
+            self.check_attempt_journal()
+
+    def check_attempt_journal(self):
+        from psycopg.errors import CheckViolation
+        from psycopg.types.json import Jsonb
+
+        from healthcare_dq.ingestion import ingest
+        from healthcare_dq.workflow import service
+
+        created = self.client.post("/v1/workflows", headers=self.header, json=REQUEST)
+        wid, path = created.json()["id"], created.headers["location"]
+        self.assertEqual(self.client.post(path + "/advance").status_code, 200)
+        with restricted("workflow_executor") as runner:
+            assets = self.settings.catalog()[1](REQUEST)
+            right = ingest(runner, assets.spec["inputs"][1]["source"], assets.files[1])["batch_id"]
+        with restricted("workflow_executor") as conn:
+            workflow, rows = service.read(conn, wid)
+            with self.assertRaises(CheckViolation):
+                conn.execute("INSERT INTO workflow_stage_attempt(workflow_id,step) VALUES(%s,0)", (wid,))
+            with self.assertRaises(CheckViolation):
+                conn.execute("""UPDATE workflow_stage_attempt SET status='failed',code='fabricated',
+                    retryable=false,finished_at=now() WHERE workflow_id=%s AND step=0""", (wid,))
+            expected = Jsonb(stages.key(workflow["spec"], 1, rows))
+            with self.assertRaises(CheckViolation), conn.transaction():
+                conn.execute("UPDATE workflow_stage SET status='running',expected=%s WHERE workflow_id=%s AND step=1",
+                             (expected, wid))
+            with self.assertRaises(CheckViolation), conn.transaction():
+                conn.execute("UPDATE workflow_stage SET status='running',expected=%s WHERE workflow_id=%s AND step=1",
+                             (expected, wid))
+                conn.execute("INSERT INTO workflow_stage_attempt(workflow_id,step) VALUES(%s,1)", (wid,))
+                conn.execute("""UPDATE workflow_stage_attempt SET status='completed',finished_at=now()
+                    WHERE workflow_id=%s AND step=1""", (wid,))
+            with self.assertRaises(CheckViolation), conn.transaction():
+                conn.execute("UPDATE workflow_stage SET status='running',expected=%s WHERE workflow_id=%s AND step=1",
+                             (expected, wid))
+                conn.execute("""UPDATE workflow_stage SET status='completed',batch_id=%s
+                    WHERE workflow_id=%s AND step=1""", (right, wid))
+        self.assertEqual(self.client.post(path + "/advance").status_code, 200)

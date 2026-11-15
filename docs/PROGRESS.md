@@ -18,11 +18,14 @@ The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database
 
 ## Phase 4
 
-[Issue #11](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/11) tracks the local REST API, durable orchestration, and reproducible HTTP demo. The [Phase 4 runbook](PHASE_4.md) records the verified setup, recovery tests, and results.
+[Issue #11](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/11) tracks the local REST API, durable orchestration, and reproducible HTTP demo. The [Phase 4 runbook](PHASE_4.md) records the verified setup, recovery tests, and results. [PR #12](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/12)
+also includes forward-only publication and attempt guards, durable failed-attempt
+recovery, and runtime database privilege checks. The complete local suite passed
+65 tests, including the retained Synthea baseline.
 
 ## Next actions
 
-1. Review Phase 4 and verify hosted checks on the current PR head.
+1. Review the Phase 4 corrective update and confirm the hosted checks on its current head.
 2. Obtain separate approval before merging or beginning another milestone.
 
 See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).

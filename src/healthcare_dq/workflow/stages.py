@@ -45,3 +45,18 @@ def execute(conn, step, expected, assets):
     if step < 4:
         return quality.validate(conn, expected[0], assets.rules)
     return matching.run(conn, *expected[:2], assets.model)
+
+
+def failure(conn, workflow_id, step):
+    """Read only the terminal failure attributed to this workflow attempt."""
+    row = conn.execute("""
+        SELECT coalesce(i.error_code,q.error_code,m.error_code,'STAGE_EXECUTION_FAILED'),
+               CASE WHEN i.id IS NULL THEN true ELSE coalesce(i.retryable,false) END
+        FROM workflow_stage_attempt w
+        LEFT JOIN ingestion_attempt i ON i.id=w.ingestion_attempt_id AND i.status='failed'
+        LEFT JOIN quality_attempt q ON q.id=w.quality_attempt_id AND q.status='failed'
+        LEFT JOIN matching_attempt m ON m.id=w.matching_attempt_id AND m.status='failed'
+        WHERE w.workflow_id=%s AND w.step=%s AND w.status='running'
+          AND num_nonnulls(i.id,q.id,m.id)=1
+    """, (workflow_id, step)).fetchone()
+    return row

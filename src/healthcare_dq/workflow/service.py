@@ -13,6 +13,7 @@ from . import stages
 
 LOG = logging.getLogger(__name__)
 LOCK_NAMESPACE = 404
+RUNNER_NAMESPACE = 406
 MAX_FAILURES = 3
 
 
@@ -67,14 +68,44 @@ def close_attempt(conn, wid, step, outcome, code=None, retryable=None):
 
 def link(conn, wid, step, result):
     field = stages.RESULT_FIELDS[step]  # Fixed identifiers, independent of client input.
+    close_attempt(conn, wid, step, "completed")
     conn.execute(f"""UPDATE workflow_stage SET status='completed',{field}=%s,updated_at=now()
                      WHERE workflow_id=%s AND step=%s""", (result, wid, step))
-    close_attempt(conn, wid, step, "completed")
     LOG.info("stage_completed", extra={"workflow_id": wid, "stage": stages.NAMES[step]})
 
 
 def after_execute():
     """Test seam at the independently committed stage boundary."""
+
+
+def record_stop(conn, wid, step, failure=None, *, busy=False):
+    if failure:
+        code, retryable = failure
+        outcome, status = "failed", "failed"
+    else:
+        code, retryable = ("STAGE_BUSY" if busy else "EXECUTOR_INTERRUPTED"), True
+        outcome, status = ("deferred" if busy else "interrupted"), "interrupted"
+    close_attempt(conn, wid, step, outcome, code, retryable)
+    conn.execute("""UPDATE workflow_stage SET status=%s,updated_at=now()
+                    WHERE workflow_id=%s AND step=%s""", (status, wid, step))
+    LOG.warning("stage_stopped", extra={"workflow_id": wid, "stage": stages.NAMES[step], "code": code})
+
+
+def recover(conn, wid, step, expected):
+    # If just the owner connection died, the original runner may still be active.
+    # Hold this transaction lock until the attempt has been reconciled.
+    if not conn.execute("SELECT pg_try_advisory_xact_lock(%s,%s)", (RUNNER_NAMESPACE, wid)).fetchone()[0]:
+        raise WorkflowError("EXECUTION_CAPACITY_BUSY")
+    failure = stages.failure(conn, wid, step)
+    if failure:
+        record_stop(conn, wid, step, failure)
+        return True
+    found = stages.lookup(conn, step, expected)
+    if found is not None:
+        link(conn, wid, step, found)
+        return True
+    record_stop(conn, wid, step)
+    return False
 
 
 def advance(wid, resolve, connection=connect):
@@ -94,13 +125,8 @@ def advance(wid, resolve, connection=connect):
         expected = stages.key(spec, step, progress)
         with owner.transaction():
             if stage["status"] == "running":
-                found = stages.lookup(owner, step, expected)
-                if found is not None:
-                    link(owner, wid, step, found)
+                if recover(owner, wid, step, expected):
                     return
-                close_attempt(owner, wid, step, "interrupted", "EXECUTOR_INTERRUPTED", True)
-                owner.execute("""UPDATE workflow_stage SET status='interrupted',updated_at=now()
-                                 WHERE workflow_id=%s AND step=%s""", (wid, step))
             elif stage["status"] == "failed":
                 failures, retryable = owner.execute("""
                     SELECT count(*),bool_and(retryable) FROM workflow_stage_attempt
@@ -131,30 +157,25 @@ def advance(wid, resolve, connection=connect):
         started = perf_counter()
         # Stage connections are short-lived and own their existing per-stage locks.
         with connection() as runner:
+            locked, = runner.execute("SELECT pg_try_advisory_lock(%s,%s)", (RUNNER_NAMESPACE, wid)).fetchone()
+            active = runner.execute("SELECT 1 FROM workflow_stage_attempt WHERE id=%s AND status='running'",
+                                    (attempt,)).fetchone()
+            if not locked or not active:
+                raise WorkflowError("EXECUTION_CAPACITY_BUSY")
+            runner.execute("SELECT set_config('healthcare_dq.workflow_attempt', %s, false)", (str(attempt),))
             result = stages.execute(runner, step, expected, assets)
         after_execute()
         LOG.info("stage_returned", extra={"workflow_id": wid, "stage": stages.NAMES[step],
                                          "attempt": attempt, "outcome": result["status"],
                                          "duration_ms": round((perf_counter() - started) * 1000, 3)})
         with owner.transaction():
+            failure = stages.failure(owner, wid, step)
             found = stages.lookup(owner, step, expected)
-            if found is not None:
+            if failure:
+                record_stop(owner, wid, step, failure)
+            elif found is not None:
                 link(owner, wid, step, found)
-                return
-            busy = result["status"] == "busy"
-            last = (result.get("attempts") or [{}])[-1]
-            retryable = busy or step >= 2 or bool(last.get("retryable"))
-            if busy:
-                code = "STAGE_BUSY"
-            elif step == 4 and isinstance(last, (tuple, list)):
-                code = last[2] or "STAGE_EXECUTION_FAILED"
-            elif isinstance(last, dict):
-                code = last.get("error_code") or last.get("code") or "STAGE_EXECUTION_FAILED"
+            elif result["status"] == "busy":
+                record_stop(owner, wid, step, busy=True)
             else:
-                code = "STAGE_EXECUTION_FAILED"
-            close_attempt(owner, wid, step, "deferred" if busy else "failed", code, retryable)
-            owner.execute("""UPDATE workflow_stage SET status=%s,updated_at=now()
-                             WHERE workflow_id=%s AND step=%s""",
-                          ("interrupted" if busy else "failed", wid, step))
-            LOG.warning("stage_stopped", extra={"workflow_id": wid, "stage": stages.NAMES[step],
-                                               "attempt": attempt, "code": code})
+                raise RuntimeError("Stage returned without a durable outcome")

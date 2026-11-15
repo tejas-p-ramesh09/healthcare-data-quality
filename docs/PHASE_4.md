@@ -42,7 +42,12 @@ database with their respective role logins. Run
 `PYTHONPATH=src uv run --locked python -m healthcare_dq.api.server`.
 The host entry point listens on 127.0.0.1:8000. Only the Compose container sets
 `WORKFLOW_CONTAINER=1`. Liveness is process-only. Readiness checks both roles,
-migration 009, and the catalog. API startup does not apply migrations.
+migration 011, and the catalog. Runtime connections also validate their PostgreSQL
+identities and privileges before serving requests. The reporting login must have
+the approved views and no other application data access. Both logins reject
+unexpected role memberships, database ownership, and elevated role attributes.
+An invalid connection returns a sanitized service-unavailable result. API startup
+does not apply migrations.
 
 ## HTTP use
 
@@ -94,10 +99,15 @@ replayed request with the same key returns the same workflow, and different
 keys for the same resolved execution converge. An executor commits expected
 stage identity and attempt before invoking the stage. A completed result and
 workflow link commit separately. If the process stops between them, the next
-advance can attach the result by key without invoking the stage again. If no
-result committed, the next owner records interruption and retries. Three known
-retryable failures exhaust the budget. Interruptions and capacity contention
-are accounted for separately. An unavailable pinned revision blocks execution
+advance can attach the result by key without invoking the stage again. Migration
+011 also captures the exact underlying attempt in its claim transaction. A recovery
+request checks its committed failure before looking for reusable success. It records
+that failure and returns the new status. A subsequent advance can retry only if
+the failure allows it. Three committed retryable failures exhaust the budget.
+Without evidence of a terminal outcome, recovery records interruption. Attempts
+created before migration 011 lack this correlation, so a pre-upgrade interrupted
+attempt cannot be retroactively attributed to a specific underlying failure.
+Interruptions and capacity contention are accounted for separately. An unavailable pinned revision blocks execution
 without substituting new behavior. A running status can remain visible until
 the next executor reconciles it. Clients should poll after a lost response
 before advancing again.
@@ -109,6 +119,37 @@ and validated links. Migration 009 grants a dedicated executor login the
 guarded stage and workflow operations and gives the reporting login vetted
 views only. Report credentials cannot read unrestricted raw JSONB or mutate
 stage results. Migration credentials stay in the one-shot process.
+
+Migration 010 recomputes the canonical manifest from registered file labels,
+sizes, and SHA-256 values before execution and publication, seals file rows,
+and checks persisted resource identities, dispositions, indexes, and counts.
+The database checks consistency with registered metadata. The ingestion service
+hashes the actual bytes and validates the Bundle, references, and projections.
+PostgreSQL does not receive the original file bytes and cannot attest to their
+contents independently. The quality guard requires a published input, the
+versioned five-rule contract and digest, outcome totals covering the applicable
+resource populations, and matching persisted finding counts. Rule predicates
+continue to run in the quality engine. A completed run with zero findings remains
+valid.
+
+Migration 011 requires the journal and stage states to agree at commit. The
+executor closes an attempt and links its result in one transaction. Terminal
+attempts are immutable. Attempt changes lock the stage row with `NOWAIT`, so
+competing changes fail promptly instead of waiting on a reverse lock order.
+The runner holds its own workflow-scoped advisory lock (406, workflow ID) until
+its connection closes. An owner recovering the same workflow must acquire that
+lock for the recovery transaction before inspecting or closing the prior attempt.
+
+## Corrective verification
+
+The complete PostgreSQL suite passed 65 local tests, including the retained
+Synthea baseline. It exercises fresh migrations, upgrades from versions 006 and
+009, direct SQL under the executor role, and elevated reporting credentials.
+The live-socket recovery test stops the API after a durable permanent failure
+and after each of three retryable failures. Restart preserves the exact error
+codes and attempt links, reaches the expected retry limit, and leaves no
+published or partially written batch for those failures. The checks below
+record the original Phase 4 demonstration.
 
 ## Observed verification
 
