@@ -1,7 +1,8 @@
 import unittest
 
-from healthcare_dq.matching.core import block, compare, decide, exact, features, fit, score
+from healthcare_dq.matching.core import block, compare, decide, exact, features, fit, phone, score
 from healthcare_dq.matching.evaluation import report
+from healthcare_dq.matching.pipeline import choose
 
 
 class MatchingTests(unittest.TestCase):
@@ -45,3 +46,28 @@ class MatchingTests(unittest.TestCase):
         value, components = score(a, model)
         self.assertAlmostEqual(value, sum(components.values()))
         self.assertGreater(value, score(b, model)[0])
+
+    def test_supported_phone_formats(self):
+        for value in ("2025550199", "+1 (202) 555-0199", "1-202-555-0199"):
+            self.assertEqual(phone(value), "2025550199")
+        for value in (None, "", "202+555+0199", "++1 2025550199", "+44 2025550199", "+1202555019"):
+            self.assertEqual(phone(value), "")
+
+    def test_review_fallback_keeps_ties_together_and_never_suggests(self):
+        ids = {str(i): str(i) for i in range(21)}
+        truth = {"left": ids, "right": ids, "families": dict.fromkeys(ids, "format"), "hard_negatives": []}
+        for count, expected in ((0, 0), (4, 4), (20, 20), (21, 0)):
+            with self.subTest(count=count):
+                rows = {("0", str(i)): {"exact": 1} for i in range(count)}
+                policy, result, _ = choose(rows, truth, "exact")
+                self.assertTrue(policy["review_only"])
+                self.assertEqual(result["dispositions"].get("review", 0), expected)
+                self.assertEqual(sum(result["full"][k] for k in ("tp", "fp")), 0)
+                self.assertEqual(decide({("a", "b"): 10}, **policy)["a", "b"][0], "review")
+
+    def test_decision_boundaries(self):
+        scores = {("a", "x"): 3, ("a", "y"): 2.5, ("b", "z"): 1, ("c", "w"): 0.99}
+        result = decide(scores, 1, 2, .5)
+        self.assertEqual(result["a", "x"], ("review", "COMPETING_CANDIDATE"))
+        self.assertEqual(result["b", "z"], ("review", "BETWEEN_THRESHOLDS"))
+        self.assertEqual(result["c", "w"][0], "unlikely_match")

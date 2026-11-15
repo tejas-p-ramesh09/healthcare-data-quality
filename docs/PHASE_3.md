@@ -34,7 +34,7 @@ export PYTHONPATH=src
 python -m healthcare_dq.matching.experiment PATH_TO_SOURCE_FHIR NEW_COHORT_DIRECTORY
 mkdir -p work/phase3
 python scripts/evaluate_matching.py fit NEW_COHORT_DIRECTORY work/phase3/fit.json
-python scripts/evaluate_matching.py test NEW_COHORT_DIRECTORY work/phase3
+python scripts/evaluate_matching.py test NEW_COHORT_DIRECTORY work/phase3 --fit-sha256 RECORDED_FIT_SHA256
 ```
 
 Publish the selected left and right directories with the existing ingestion
@@ -44,7 +44,15 @@ Use `status`, `pairs`, and `no-candidates` with the returned run ID. Both
 52-record final sides were ingested and the persisted match run produced 47
 candidates. Batch-scoped foreign keys enforce endpoint provenance. Runtime
 permissions prevent result updates and deletes, and triggers reject inserts and
-attempt edits after completion.
+attempt edits after completion. Migration 006 limits runtime registration to
+identity and configuration columns. A database trigger requires the registered
+initial state. Completion requires the recorded candidate count to equal the
+number of persisted candidates, exactly one completed attempt, no running
+attempt, and two recommendations per candidate. The foreign keys and unique
+method keys imply a corresponding exact and statistical score for each
+candidate. Zero candidates may complete with a completed attempt and zero
+outputs. Model validation checks both methods, their policies, and finite
+weights and thresholds before registration.
 
 Splits were fixed by seeded parent groups before scoring. Fit used 192 people
 (116 matched, 76 unmatched), and selection and test each used 64 people
@@ -53,14 +61,14 @@ hard-negative groups stayed together, with 38, 12 and 12 labeled pairs
 respectively. The final split had 6–7 matched examples per perturbation family.
 Distinct FHIR IDs are used on each side. Identifiers, truth IDs and metadata are
 excluded from features. Only the offline evaluator reads truth files. A second
-build reproduced the entire frozen cohort byte for byte. The locked fit artifact
+build reproduced the entire frozen cohort byte for byte. Record the fit artifact SHA-256 after selection and before final scoring. The test command requires the separately recorded value and rejects a mismatch. The locked fit artifact
 SHA-256 was `164747533708fa307de6d040bb3b14e11f2e332b1ddd665f6ee4033d243e295d`.
 
 ## Comparisons and decisions
 
 Normalization uses Unicode NFKC and case folding, whitespace/token cleanup,
 recognized alternate names, calendar-checked partial dates, ten-digit US phone
-features and basic street/ZIP normalization. Four blocking passes use full DOB
+features and basic street/ZIP normalization. A plus sign is accepted only in a leading +1 prefix. Four blocking passes use full DOB
 with given or family prefix, birth year plus ZIP and given initial, or phone.
 Missing keys emit nothing. Limits are 5,000 patients per side, 10,000 pair
 emissions per block and 100,000 unique pairs. Exceeding a limit fails the run.
@@ -72,7 +80,11 @@ and correlated features such as street and ZIP limit interpretation. The score
 is a sum of log likelihood ratios and is not a calibrated probability. The
 selection sweep prioritizes precision, then recall, then fewer reviews, with
 at least five suggestions and at most 20 review pairs for the selected operating
-point. A review-only fallback applies if none qualify. The chosen exact and
+point. If none qualify, the review-only fallback disables suggestions even on
+unseen inputs. On the selection split it admits whole groups of tied scores from
+the top down until the next group would exceed 20 reviews. Lower-scoring pairs
+remain scored and are marked unlikely. Review volume on the final split is a
+measurement, since its distribution may differ from selection. The chosen exact and
 statistical policies both had equal low/high thresholds (1 and 5.42067691)
 and zero tie margin. Competing candidates at or above the suggestion threshold
 can still go to review. Statistical matching was selected on the selection split.

@@ -7,7 +7,7 @@ from pathlib import Path
 
 from healthcare_dq.matching.core import features
 from healthcare_dq.matching.experiment import parents
-from healthcare_dq.matching.pipeline import assess, select
+from healthcare_dq.matching.pipeline import assess, select, validate_model
 
 
 def load(root, split, index):
@@ -36,6 +36,7 @@ def main():
     p.add_argument("command", choices=("fit", "test"))
     p.add_argument("cohort", type=Path)
     p.add_argument("output", type=Path)
+    p.add_argument("--fit-sha256")
     a = p.parse_args()
     manifest_bytes = (a.cohort / "manifest.json").read_bytes()
     digest = hashlib.sha256(manifest_bytes).hexdigest()
@@ -45,7 +46,10 @@ def main():
         model, results = select(fit_data, selection)
         save(a.output, {"cohort_sha256": digest, "model": model, **results})
     else:
-        artifact = json.loads((a.output / "fit.json").read_text())
+        artifact_bytes = (a.output / "fit.json").read_bytes()
+        if not a.fit_sha256 or hashlib.sha256(artifact_bytes).hexdigest() != a.fit_sha256:
+            p.error("Provide the independently recorded --fit-sha256 for the frozen model")
+        artifact = json.loads(artifact_bytes)
         if artifact["cohort_sha256"] != digest:
             raise ValueError("FIT_COHORT_MISMATCH")
         splits = [load(a.cohort, k, index) for k in ("fit", "select", "test")]
@@ -53,6 +57,7 @@ def main():
         if any(a & b for i, a in enumerate(ids) for b in ids[i + 1:]):
             raise ValueError("IDENTITY_LEAKAGE")
         model = artifact["model"]
+        validate_model(model)
         result = assess(*splits[-1], model)
         save(a.output / "test.json", {"cohort_sha256": digest, "model": model, "final": result})
 

@@ -34,12 +34,15 @@ def birth(value):
 
 
 def phone(value):
-    if not isinstance(value, str) or not re.fullmatch(r"[+0-9 ().-]+", value):
+    if not isinstance(value, str) or not re.fullmatch(r"(?:\+1[ ().-]*)?[0-9 ().-]+", value.strip()):
         return ""
+    value = value.strip()
     digits = re.sub(r"[^0-9]", "", value)
+    if value.startswith("+") and len(digits) != 11:
+        return ""
     if len(digits) == 11 and digits.startswith("1"):
         digits = digits[1:]
-    return digits if len(digits) == 10 and (not value.startswith("+") or value.startswith("+1")) else ""
+    return digits if len(digits) == 10 else ""
 
 
 @dataclass(frozen=True)
@@ -174,7 +177,7 @@ def score(vector, model):
     return round(sum(contributions.values()), 8), contributions
 
 
-def decide(scores, low, high, margin):
+def decide(scores, low, high, margin, review_only=False):
     if not all(math.isfinite(x) for x in (low, high, margin)) or low > high or margin < 0:
         raise ValueError("INVALID_DECISION_POLICY")
     groups = defaultdict(list)
@@ -190,7 +193,7 @@ def decide(scores, low, high, margin):
                        for endpoint in enumerate(pair) if len(values := top[endpoint]) > 1]
         if value < low:
             result[pair] = ("unlikely_match", "BELOW_REVIEW_THRESHOLD")
-        elif value < high:
+        elif review_only or value < high:
             result[pair] = ("review", "BETWEEN_THRESHOLDS")
         elif any(other >= value - margin for other in competitors):
             result[pair] = ("review", "COMPETING_CANDIDATE")

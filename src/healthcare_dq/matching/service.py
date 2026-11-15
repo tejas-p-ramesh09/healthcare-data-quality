@@ -9,7 +9,7 @@ import psycopg
 from psycopg.types.json import Jsonb
 
 from .core import features
-from .pipeline import rank, recommendations
+from .pipeline import rank, recommendations, validate_model
 
 
 def revision():
@@ -20,6 +20,7 @@ def revision():
 
 
 def register(conn, left, right, model):
+    validate_model(model)
     config = {"model": model, "revision": revision()}
     digest = hashlib.sha256(json.dumps(config, sort_keys=True, allow_nan=False).encode()).hexdigest()
     with conn.transaction():
