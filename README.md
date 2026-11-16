@@ -13,3 +13,8 @@ Start with the [local API demo](docs/PHASE_4.md). It uses checked-in synthetic f
 - [Phase 1 ingestion runbook and evidence](docs/PHASE_1.md)
 - [Phase 2 quality rules and evaluation](docs/PHASE_2.md)
 - [Phase 3 Patient matching and evaluation](docs/PHASE_3.md)
+
+## Workflow Explorer
+
+Use the local [Workflow Explorer](docs/PHASE_5.md) to register synthetic sources,
+advance validation and matching, and explore the resulting evidence.

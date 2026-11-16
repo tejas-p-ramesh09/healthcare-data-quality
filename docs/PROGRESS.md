@@ -18,14 +18,21 @@ The [Phase 2 runbook](PHASE_2.md) records five versioned quality rules, database
 
 ## Phase 4
 
-[Issue #11](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/11) tracks the local REST API, durable orchestration, and reproducible HTTP demo. The [Phase 4 runbook](PHASE_4.md) records the verified setup, recovery tests, and results. [PR #12](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/12)
-also includes forward-only publication and attempt guards, durable failed-attempt
-recovery, and runtime database privilege checks. The complete local suite passed
-65 tests, including the retained Synthea baseline.
+[PR #12](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/12)
+merged at `da08cf4` and closed [Issue #11](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/11).
+The [Phase 4 runbook](PHASE_4.md) describes the fixture-only API, durable
+recovery, reporting roles, and verified fresh-database demo.
 
-## Next actions
+## Phase 5
 
-1. Review the Phase 4 corrective update and confirm the hosted checks on its current head.
-2. Obtain separate approval before merging or beginning another milestone.
+[Issue #13](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/13)
+and [PR #14](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/14)
+track the local Workflow Explorer. The complete synthetic browser journey
+and sampled accessibility checks passed in hosted Linux CI. See the
+[Phase 5 runbook](PHASE_5.md) for setup, the browser contract, and verification.
+
+## Next action
+
+Review the linked milestone PR and its hosted checks before requesting a merge.
 
 See the [project context](PROJECT_CONTEXT.md) and [decision log](DECISIONS.md).

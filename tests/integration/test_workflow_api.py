@@ -298,3 +298,73 @@ class WorkflowAPI(unittest.TestCase):
                 conn.execute("""UPDATE workflow_stage SET status='completed',batch_id=%s
                     WHERE workflow_id=%s AND step=1""", (right, wid))
         self.assertEqual(self.client.post(path + "/advance").status_code, 200)
+
+    def test_guarded_advance_rejects_stale_and_malformed_headers(self):
+        from healthcare_dq.workflow import service
+
+        _, original = self.settings.catalog()
+        tag = uuid4().hex
+
+        def resolve(request):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += "-" + tag
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, resolve)):
+            created = self.client.post("/v1/workflows", headers=self.header, json=REQUEST)
+            path = created.headers["location"]
+            for value in ("", "match:pending:01", "fake:pending:0", "match:completed:0",
+                          "match:failed:-1", "match:failed:9223372036854775808"):
+                rejected = self.client.post(path + "/advance", headers={"X-Expected-Stage": value})
+                self.assertEqual(rejected.status_code, 400)
+                self.assertEqual(rejected.json()["error"]["code"], "INVALID_EXPECTED_STAGE")
+            headers = {"X-Expected-Stage": "ingest_left:pending:0"}
+            with ThreadPoolExecutor() as pool:
+                def advance(_):
+                    return self.client.post(path + "/advance", headers=headers)
+
+                responses = list(pool.map(advance, range(2)))
+            self.assertEqual(sum(r.status_code == 200 for r in responses), 1)
+            self.assertIn(next(r for r in responses if r.status_code != 200).json()["error"]["code"],
+                          {"STAGE_STATE_CHANGED", "WORKFLOW_BUSY", "EXECUTION_CAPACITY_BUSY"})
+            rejected = self.client.post(path + "/advance", headers=headers)
+            self.assertEqual(rejected.json()["error"]["code"], "STAGE_STATE_CHANGED")
+            with restricted("workflow_executor") as conn:
+                _, rows = service.read(conn, created.json()["id"])
+                self.assertEqual([row["attempt_count"] for row in rows], [1, 0, 0, 0, 0])
+            legacy = self.client.post(path + "/advance")
+            self.assertEqual(legacy.json()["stages"][1]["status"], "completed")
+
+    def test_workflow_listing_traverses_multiple_scope_bound_pages(self):
+        _, original = self.settings.catalog()
+        tag = uuid4().hex
+        resolved = []
+
+        def resolve(request):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += f"-{tag}-{len(resolved)}"
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, resolve)):
+            for _ in range(3):
+                result = self.client.post("/v1/workflows", headers={"Idempotency-Key": uuid4().hex}, json=REQUEST)
+                self.assertEqual(result.status_code, 201)
+                resolved.append(result.json()["id"])
+
+        cursor = None
+        traversed = []
+        while True:
+            query = {"limit": 1}
+            if cursor:
+                query["cursor"] = cursor
+            response = self.client.get("/v1/workflows", params=query)
+            self.assertEqual(response.status_code, 200)
+            contents = response.json()
+            traversed.extend(row["id"] for row in contents["items"])
+            self.assertEqual(len(traversed), len(set(traversed)))
+            cursor = contents["next_cursor"]
+            if not cursor:
+                break
+        self.assertEqual([wid for wid in traversed if wid in resolved], resolved)

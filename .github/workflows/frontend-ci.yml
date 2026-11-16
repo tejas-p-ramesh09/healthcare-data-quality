@@ -1,0 +1,83 @@
+name: Workflow Explorer checks
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  frontend-contract-and-components:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: frontend/.node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.13'
+      - name: Export the backend contract
+        env:
+          PYTHONPATH: src
+        run: |
+          python -m pip install uv==0.11.19
+          uv sync --locked
+          mkdir -p work/phase5
+          uv run --locked python scripts/export_openapi.py > work/phase5/openapi.json
+      - name: Verify types, lint, component tests, and build
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run contract
+          git diff --exit-code -- src/api/schema.d.ts
+          npm run lint
+          npm test
+          npm run build
+
+  fresh-browser-workflow:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: frontend/.node-version
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Build the explorer and install Chromium
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+          npx playwright install --with-deps chromium
+      - name: Exercise the synthetic workflow and inspect evidence
+        shell: bash
+        run: |
+          umask 077
+          mkdir -p work/phase5
+          for name in POSTGRES_PASSWORD INGEST_PASSWORD WORKFLOW_EXEC_PASSWORD WORKFLOW_REPORT_PASSWORD WORKFLOW_TOKEN; do
+            printf '%s=%s\n' "$name" "$(openssl rand -hex 24)" >> work/phase5/demo.env
+          done
+          set -a
+          source work/phase5/demo.env
+          set +a
+          printf '::add-mask::%s\n' "$WORKFLOW_TOKEN"
+          export DEMO_COMPOSE_PROJECT=healthcare-phase5-ci
+          export WORKFLOW_SCREENSHOTS="$RUNNER_TEMP/workflow-explorer"
+          docker compose -p "$DEMO_COMPOSE_PROJECT" --profile workflow up -d --build --wait
+          npm --prefix frontend run e2e
+      - uses: actions/upload-artifact@v7
+        with:
+          name: workflow-explorer-screens
+          path: ${{ runner.temp }}/workflow-explorer/*.png
+          if-no-files-found: error
+          retention-days: 14

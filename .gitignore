@@ -31,3 +31,9 @@ venv/
 /output/
 /outputs/
 /data/generated/
+
+# Workflow Explorer
+frontend/node_modules/
+frontend/dist/
+frontend/playwright-report/
+frontend/test-results/

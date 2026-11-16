@@ -29,6 +29,14 @@ Match distinct published synthetic Patient batches with versioned demographic ev
 
 Use a fixture-only FastAPI interface and an explicit one-stage advance operation. A PostgreSQL workflow records pinned input identities and reconciles completed underlying results after interruption. Migration, execution, and reporting credentials are separate. See the [Phase 4 runbook](PHASE_4.md) for the local trust boundary and operational results.
 
+## Phase 5 decisions
+
+Use a React and TypeScript frontend with a loopback Vite proxy and an in-memory
+bearer session. FastAPI owns the API contract and workflow state. Browser
+advances compare a stage snapshot under the existing execution locks.
+Quality, matching, and provenance views explain published evidence without
+fetching patient payloads. See the [Phase 5 runbook](PHASE_5.md).
+
 ## Provisional technical decisions
 
 | Area | Starting proposal | Tradeoff or evidence needed |
