@@ -47,7 +47,18 @@ return `400 INVALID_EXPECTED_STAGE`. Under the existing locks the server compare
 the complete tuple to the first incomplete stage. A mismatch returns
 `409 STAGE_STATE_CHANGED` before any stage work or attempt write. A busy executor
 may respond before the comparison. Requests without the header retain the
-Phase 4 contract. The browser retries reads and leaves all mutations explicit.
+Phase 4 contract. The browser retries eligible reads. Submission and advancement
+attempt their requests immediately, even when the browser reports offline,
+and leave no mutations queued for reconnect.
+
+A confirmed submission or advance cancels in-flight workflow detail reads
+before updating the cache. The detail query, manual checks, recovery polling,
+and mutation responses all use the same cache rule. A snapshot with an older
+attempt count or a backwards transition within an attempt cannot replace a
+newer snapshot. A completed stage stays completed. A later attempt can
+legitimately resume a failed or interrupted stage. The cache uses the
+API's persisted attempt counts and stage statuses, with no client-computed
+progress or timestamp ordering.
 
 Regenerate the API types from the repository root with the locked Python
 environment and no database or real token.
@@ -94,6 +105,16 @@ both Playwright tests passed. The browser run produced these observed results:
 The browser CI job publishes sanitized screenshots of execution, matching
 evidence, and the narrow quality report.
 
+## Corrective verification
+
+The corrective regression suite exercises both offline mutations, confirms
+reconnect issues no additional POST, and verifies same-intent key reuse.
+Controlled response ordering covers cancellation before confirmed cache
+writes, the next stage header, and overlapping detail, manual, and recovery
+reads. The preview proxy accepts POST on registration and advance and GET
+on the approved read routes. Browser contract tests cover rejected methods,
+unsupported paths, cross-origin requests, and authorization.
+
 ## Interpretation and limits
 
 The quality explorer presents project-specific rules. The matching explorer
@@ -102,6 +123,10 @@ aggregate no-candidate counts and their blocking context. Source coordinates
 link to verified batch and file metadata. The interface exposes neither the
 raw Patient record nor demographic values. It supports one local operator,
 the checked-in fixtures and profiles, and deliberate single-stage actions.
-Automated accessibility checks supplement keyboard, focus and narrow-layout
+The latest attempt's retryable flag does not include the remaining retry
+budget. The server's nonretryable response is authoritative. The real
+fixture demonstration covers a single matching page. Multi-page matching
+browser traversal remains a follow-up. Automated accessibility checks
+supplement keyboard, focus and narrow-layout
 checks. This demo establishes no population-level accuracy or performance
 claim.

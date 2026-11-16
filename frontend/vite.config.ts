@@ -12,7 +12,8 @@ const apiPort = port('WORKFLOW_API_PORT', 8000)
 const uiPort = port('WORKFLOW_UI_PORT', 5173)
 const host = `127.0.0.1:${uiPort}`
 const origin = `http://${host}`
-const allowedRoute = /^\/v1\/(catalog|workflows(?:\/[1-9][0-9]*(?:\/(?:advance|quality-findings|recommendations|batches\/(?:left|right)(?:\/files)?))?)?)$/
+const readRoute = /^\/v1\/(catalog|workflows(?:\/[1-9][0-9]*(?:\/(?:quality-findings|recommendations|batches\/(?:left|right)(?:\/files)?))?)?)$/
+const writeRoute = /^\/v1\/workflows(?:\/[1-9][0-9]*\/advance)?$/
 
 function boundary(req: IncomingMessage, res: ServerResponse, next: () => void) {
   const path = (req.url ?? '').split('?')[0]
@@ -22,10 +23,13 @@ function boundary(req: IncomingMessage, res: ServerResponse, next: () => void) {
     res.writeHead(403).end()
     return
   }
-  if (path.startsWith('/v1') && (!allowedRoute.test(path) ||
-      (req.method !== 'GET' && !(req.method === 'POST' && (path === '/v1/workflows' || path.endsWith('/advance')))))) {
-    res.writeHead(404).end()
-    return
+  if (path.startsWith('/v1')) {
+    const allowed = (req.method === 'GET' && readRoute.test(path)) ||
+      (req.method === 'POST' && writeRoute.test(path))
+    if (!allowed) {
+      res.writeHead(404).end()
+      return
+    }
   }
   if (path.startsWith('/v1/')) res.setHeader('Cache-Control', 'no-store')
   res.setHeader('Referrer-Policy', 'no-referrer')
