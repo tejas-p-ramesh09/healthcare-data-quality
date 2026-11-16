@@ -335,3 +335,36 @@ class WorkflowAPI(unittest.TestCase):
                 self.assertEqual([row["attempt_count"] for row in rows], [1, 0, 0, 0, 0])
             legacy = self.client.post(path + "/advance")
             self.assertEqual(legacy.json()["stages"][1]["status"], "completed")
+
+    def test_workflow_listing_traverses_multiple_scope_bound_pages(self):
+        _, original = self.settings.catalog()
+        tag = uuid4().hex
+        resolved = []
+
+        def resolve(request):
+            assets = original(request)
+            for side in assets.spec["inputs"]:
+                side["source"] += f"-{tag}-{len(resolved)}"
+            return assets
+
+        with patch.object(Settings, "catalog", return_value=({}, resolve)):
+            for _ in range(3):
+                result = self.client.post("/v1/workflows", headers={"Idempotency-Key": uuid4().hex}, json=REQUEST)
+                self.assertEqual(result.status_code, 201)
+                resolved.append(result.json()["id"])
+
+        cursor = None
+        traversed = []
+        while True:
+            query = {"limit": 1}
+            if cursor:
+                query["cursor"] = cursor
+            response = self.client.get("/v1/workflows", params=query)
+            self.assertEqual(response.status_code, 200)
+            contents = response.json()
+            traversed.extend(row["id"] for row in contents["items"])
+            self.assertEqual(len(traversed), len(set(traversed)))
+            cursor = contents["next_cursor"]
+            if not cursor:
+                break
+        self.assertEqual([wid for wid in traversed if wid in resolved], resolved)
