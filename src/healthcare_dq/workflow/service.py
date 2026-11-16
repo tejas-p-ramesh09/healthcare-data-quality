@@ -55,7 +55,10 @@ def read(conn, wid):
         w = cur.execute("SELECT * FROM workflow WHERE id=%s", (wid,)).fetchone()
         if w is None:
             raise WorkflowError("WORKFLOW_NOT_FOUND")
-        current = cur.execute("SELECT * FROM workflow_stage WHERE workflow_id=%s ORDER BY step",
+        current = cur.execute("""SELECT s.*,
+            (SELECT count(*) FROM workflow_stage_attempt a
+             WHERE (a.workflow_id,a.step)=(s.workflow_id,s.step)) AS attempt_count
+            FROM workflow_stage s WHERE workflow_id=%s ORDER BY step""",
                               (wid,)).fetchall()
     return w, current
 
@@ -108,7 +111,7 @@ def recover(conn, wid, step, expected):
     return False
 
 
-def advance(wid, resolve, connection=connect):
+def advance(wid, resolve, connection=connect, *, expected_stage=None):
     with connection() as owner:
         read(owner, wid)
         # Global lock bounds the number of running stages across server processes.
@@ -118,6 +121,12 @@ def advance(wid, resolve, connection=connect):
             raise WorkflowError("WORKFLOW_BUSY")
         workflow, progress = read(owner, wid)
         stage = next((s for s in progress if s["status"] != "completed"), None)
+        if expected_stage is not None:
+            current = None if stage is None else (
+                stages.NAMES[stage["step"]], stage["status"], stage["attempt_count"],
+            )
+            if current != expected_stage:
+                raise WorkflowError("STAGE_STATE_CHANGED")
         if stage is None:
             return
         step = stage["step"]

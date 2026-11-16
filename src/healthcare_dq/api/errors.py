@@ -3,6 +3,8 @@
 from starlette.responses import JSONResponse
 
 ERRORS = {
+    "INVALID_EXPECTED_STAGE": (400, "Expected stage header is malformed.", False),
+    "STAGE_STATE_CHANGED": (409, "The workflow stage changed. Refresh its status.", False),
     "INVALID_CURSOR": (400, "The pagination cursor is invalid for this list.", False),
     "INVALID_IDEMPOTENCY_KEY": (400, "Provide a valid Idempotency-Key.", False),
     "UNAUTHORIZED": (401, "Local bearer token required.", False),

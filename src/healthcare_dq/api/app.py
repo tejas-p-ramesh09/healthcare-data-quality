@@ -11,7 +11,7 @@ from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException
 from starlette.middleware.trustedhost import TrustedHostMiddleware
 
-from healthcare_dq.workflow import service
+from healthcare_dq.workflow import service, stages
 
 from . import reports, schemas
 from .config import Settings
@@ -22,7 +22,19 @@ Wid = Annotated[int, Path(ge=1, le=2147483647)]
 Limit = Annotated[int, Query(ge=1, le=100)]
 Cursor = Annotated[str | None, Query()]
 KeyHeader = Annotated[str | None, Header(alias="Idempotency-Key")]
+ExpectedHeader = Annotated[str | None, Header(
+    alias="X-Expected-Stage", description="stage_name:status:attempt_count (canonical unsigned decimal)",
+)]
 LOG = logging.getLogger(__name__)
+
+
+def parse_expected_stage(value):
+    if value is None:
+        return None
+    match = re.fullmatch(r"([a-z_]+):(pending|running|interrupted|failed):(0|[1-9][0-9]{0,18})", value)
+    if not match or match[1] not in stages.NAMES or int(match[3]) > 9223372036854775807:
+        raise service.WorkflowError("INVALID_EXPECTED_STAGE")
+    return match[1], match[2], int(match[3])
 
 
 def create_app(settings=None):
@@ -105,9 +117,12 @@ def create_app(settings=None):
         return get_summary(wid)
 
     @app.post("/v1/workflows/{wid}/advance", response_model=schemas.Summary)
-    def advance(wid: Wid, request: Request):
+    def advance(wid: Wid, request: Request, expected_stage: ExpectedHeader = None):
         LOG.info("workflow_advance", extra={"request_id": request.state.request_id, "workflow_id": wid})
-        service.advance(wid, lambda request: settings.catalog()[1](request), settings.execute_connection)
+        if len(request.headers.getlist("X-Expected-Stage")) > 1:
+            raise service.WorkflowError("INVALID_EXPECTED_STAGE")
+        service.advance(wid, lambda request: settings.catalog()[1](request), settings.execute_connection,
+                        expected_stage=parse_expected_stage(expected_stage))
         return get_summary(wid)
 
     @app.get("/v1/workflows/{wid}/quality-findings", response_model=schemas.Page[schemas.Finding])
