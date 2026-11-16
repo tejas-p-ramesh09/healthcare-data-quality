@@ -2,7 +2,8 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createContext, useContext, useRef, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
 import { ApiError, makeApi, retryRead } from './client'
-import type { Api } from './client'
+import type { Api, Workflow } from './client'
+import { retainWorkflow } from './workflow-state'
 
 const Session = createContext<{ api: Api; disconnect: () => void; isActive: () => boolean } | null>(null)
 export function useSession() {
@@ -31,6 +32,11 @@ export function SessionGate({ children }: { children: ReactNode }) {
       const query = new QueryClient({ defaultOptions: {
         queries: { retry: retryRead, staleTime: 2_000 }, mutations: { retry: false },
       } })
+      // Apply freshness at cache commit time for both query and explicit writers.
+      query.setQueryDefaults(['workflow'], {
+        structuralSharing: (previous, incoming) =>
+          retainWorkflow(previous as Workflow | undefined, incoming as Workflow),
+      })
       const api = makeApi(token, () => {
         if (active.current !== id) return
         active.current = null

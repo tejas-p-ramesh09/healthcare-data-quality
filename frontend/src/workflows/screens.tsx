@@ -6,6 +6,7 @@ import type { WorkflowContext } from '../ui'
 import { ApiError } from '../api/client'
 import type { Stage, Submission, Workflow } from '../api/client'
 import { useSession } from '../api/session'
+import { applyConfirmedWorkflow, workflowKey } from '../api/workflow-state'
 import { DateTime, ErrorNotice, Loading, Pagination, Status, usePages } from '../ui'
 
 const stageLabels: Record<string, string> = {
@@ -72,6 +73,7 @@ export function CreateWorkflow() {
   const intent = useRef<{ key: string; payload: string } | null>(null)
   const submitting = useRef(false)
   const mutation = useMutation({
+    networkMode: 'always', retry: false,
     mutationFn: ({ payload, key }: { payload: Submission; key: string }) => api.submit(payload, key),
   })
   const left = catalog.data?.fixtures.find(f => f.key === input.left_fixture)
@@ -89,8 +91,8 @@ export function CreateWorkflow() {
     try {
       const workflow = await mutation.mutateAsync({ payload, key: intent.current.key })
       if (!isActive()) return
-      cache.setQueryData(['workflow', workflow.id], workflow)
-      void cache.invalidateQueries({ queryKey: ['workflows'] })
+      await applyConfirmedWorkflow(cache, workflow, isActive)
+      if (!isActive()) return
       navigate(`/workflows/${workflow.id}`)
     } catch {
       // The same selection retains its submission key after failure.
@@ -157,8 +159,9 @@ export function WorkflowDetail() {
 
   function record(data: Workflow) {
     if (!isActive()) return
-    cache.setQueryData(['workflow', workflow.id], data)
+    const accepted = cache.setQueryData<Workflow>(workflowKey(workflow.id), data)
     void cache.invalidateQueries({ queryKey: ['workflows'] })
+    return accepted
   }
 
   async function check(observed?: Stage, delay = 0) {
@@ -172,10 +175,11 @@ export function WorkflowDetail() {
         if (controller.signal.aborted) return
         const data = await api.workflow(workflow.id, controller.signal)
         if (controller.signal.aborted) return
-        record(data)
-        const stage = data.stages.find(s => s.name === observed?.name)
+        const accepted = record(data)
+        if (!accepted) return
+        const stage = accepted.stages.find(s => s.name === observed?.name)
         if (observed ? stage?.status === 'completed' || stage?.status === 'failed' ||
-            stage?.status === 'interrupted' : data.status !== 'running') {
+            stage?.status === 'interrupted' : accepted.status !== 'running') {
           setNotice('Durable workflow status refreshed.')
           return
         }
@@ -188,15 +192,20 @@ export function WorkflowDetail() {
     }
   }
 
-  const advance = useMutation({ mutationFn: (stage: Stage) => api.advance(workflow.id, stage) })
+  const advance = useMutation({
+    networkMode: 'always', retry: false,
+    mutationFn: (stage: Stage) => api.advance(workflow.id, stage),
+  })
   async function run() {
     if (!current || busy.current || checking) return
     busy.current = true
     setNotice('')
     try {
       const response = await advance.mutateAsync(current)
-      record(response)
-      setNotice('Durable workflow status updated.')
+      polling.current?.abort()
+      setChecking(false)
+      await applyConfirmedWorkflow(cache, response, isActive)
+      if (isActive()) setNotice('Durable workflow status updated.')
     } catch (error) {
       if (!isActive() || !(error instanceof ApiError) || error.status === 401) return
       if (error.code === 'STAGE_NOT_RETRYABLE') setBlocked(true)

@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react'
 import { Link, Navigate, NavLink, Outlet, Route, Routes, useLocation, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useSession } from './api/session'
+import { workflowKey } from './api/workflow-state'
 import type { WorkflowContext } from './ui'
 import { ErrorNotice, Loading, Status } from './ui'
 import { CreateWorkflow, Overview, WorkflowDetail } from './workflows/screens'
@@ -44,7 +45,7 @@ function WorkflowRoute() {
 
 function WorkflowBoundary({ id }: { id: number }) {
   const { api } = useSession()
-  const result = useQuery({ queryKey: ['workflow', id], queryFn: ({ signal }) => api.workflow(id, signal) })
+  const result = useQuery({ queryKey: workflowKey(id), queryFn: ({ signal }) => api.workflow(id, signal) })
   if (result.isPending) return <Loading>Loading workflow…</Loading>
   if (!result.data) return <ErrorNotice error={result.error} />
   const workflow = result.data
