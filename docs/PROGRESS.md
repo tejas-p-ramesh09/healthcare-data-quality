@@ -26,8 +26,10 @@ recovery, reporting roles, and verified fresh-database demo.
 ## Phase 5
 
 [Issue #13](https://github.com/tejas-p-ramesh09/healthcare-data-quality/issues/13)
-tracks the local Workflow Explorer. See the [Phase 5 runbook](PHASE_5.md) for
-setup, the browser contract, and verification.
+and [PR #14](https://github.com/tejas-p-ramesh09/healthcare-data-quality/pull/14)
+track the local Workflow Explorer. The complete synthetic browser journey
+and sampled accessibility checks passed in hosted Linux CI. See the
+[Phase 5 runbook](PHASE_5.md) for setup, the browser contract, and verification.
 
 ## Next action
 

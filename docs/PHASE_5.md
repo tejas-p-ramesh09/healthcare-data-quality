@@ -75,8 +75,24 @@ Local verification on the approved stack ran 67 Python tests including the
 retained Synthea baseline and nine frontend component/integration tests.
 Type checking, the production build, lint and npm audit passed. The local
 macOS execution sandbox blocked headless Chromium launch. The proxy-only
-Playwright test passed locally. The full browser check and sampled axe scans
-run in the separate Linux CI job.
+Playwright test passed locally. On the [hosted Linux browser run](https://github.com/tejas-p-ramesh09/healthcare-data-quality/actions/runs/43823594442),
+both Playwright tests passed. The browser run produced these observed results:
+
+- Five completed stages with one durable attempt per stage. A deliberately lost
+  successful response recovered through status reads. A second tab's stale
+  advance was rejected, and the next stage still had zero attempts.
+- Zero left findings and one right missing-birth-date finding. One candidate
+  was suggested by both methods. Zero left Patients and one right Patient had
+  no candidate. The displayed file and entry linked to the correct batch and hash.
+- API restart and browser reconnect returned the same stage records and counts.
+  Authorization and cross-origin proxy rejections passed.
+- Eight sampled scans using axe found zero violations across connection,
+  overview, creation, execution, desktop quality, provenance, matching, and
+  the 375 px quality view. Keyboard activation and route focus passed in the
+  exercised views.
+
+The browser CI job publishes sanitized screenshots of execution, matching
+evidence, and the narrow quality report.
 
 ## Interpretation and limits
 

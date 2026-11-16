@@ -70,6 +70,7 @@ jobs:
           set -a
           source work/phase5/demo.env
           set +a
+          printf '::add-mask::%s\n' "$WORKFLOW_TOKEN"
           export DEMO_COMPOSE_PROJECT=healthcare-phase5-ci
           export WORKFLOW_SCREENSHOTS="$RUNNER_TEMP/workflow-explorer"
           docker compose -p "$DEMO_COMPOSE_PROJECT" --profile workflow up -d --build --wait

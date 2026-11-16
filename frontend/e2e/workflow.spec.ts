@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process'
-import { mkdirSync, readFileSync } from 'node:fs'
+import { mkdirSync, readFileSync, readdirSync } from 'node:fs'
 import { resolve } from 'node:path'
 import AxeBuilder from '@axe-core/playwright'
 import { expect, test } from '@playwright/test'
@@ -13,7 +13,9 @@ const expected = JSON.parse(readFileSync('../fixtures/demo/expected.json', 'utf8
 
 async function connect(page: Page, value = token) {
   if (!value) throw new Error('Set the local demo token')
-  await page.getByLabel('Local API token').fill(value)
+  const input = page.getByLabel('Local API token')
+  await expect(input).toBeVisible()
+  await input.evaluate((element, secret) => { (element as HTMLInputElement).value = secret }, value)
   await page.getByRole('button', { name: 'Connect' }).click()
 }
 
@@ -31,6 +33,11 @@ async function capture(page: Page, name: string) {
 
 test('runs the five real stages, reconciles a lost response, and reopens after restart', async ({ page, browser, request }) => {
   if (!token || !project) throw new Error('Set WORKFLOW_TOKEN and DEMO_COMPOSE_PROJECT for a fresh demo stack')
+  for (const file of readdirSync('dist/assets')) {
+    if (readFileSync(resolve('dist/assets', file), 'utf8').includes(token)) {
+      throw new Error('Unexpected credential in browser build')
+    }
+  }
   const seenUrls: string[] = []
   page.on('request', req => seenUrls.push(req.url()))
   await page.goto('/workflows')
@@ -40,7 +47,10 @@ test('runs the five real stages, reconciles a lost response, and reopens after r
   await connect(page)
   await expect(page.getByRole('heading', { name: 'Workflow history' })).toBeVisible()
   await scan(page)
-  await page.getByRole('link', { name: 'New workflow' }).first().click()
+  await expect(page.locator('#main')).toBeFocused()
+  await page.keyboard.press('Tab')
+  await expect(page.locator('#main').getByRole('link', { name: 'New workflow' })).toBeFocused()
+  await page.keyboard.press('Enter')
   await expect(page.locator('#main')).toBeFocused()
   await page.getByLabel('Left source').selectOption('demo-source-a')
   await page.getByLabel('Right source').selectOption('demo-source-a')
@@ -118,6 +128,7 @@ test('runs the five real stages, reconciles a lost response, and reopens after r
   await capture(page, 'phase5-matching')
 
   await page.setViewportSize({ width: 375, height: 812 })
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(375)
   await page.getByRole('link', { name: 'Quality findings' }).focus()
   await page.keyboard.press('Enter')
   await expect(page.locator('#main')).toBeFocused()

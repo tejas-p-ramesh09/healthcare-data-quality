@@ -167,6 +167,7 @@ function PairCard({ pair, id }: { pair: Pair; id: number }) {
     <details><summary>Comparison evidence</summary>
       <p>Blocking rules: {row.block_codes.join(', ') || 'Unavailable'}</p>
       <p className="hint">Comparison levels and score contributions summarize attributes without displaying their values. The ranking score is not a probability.</p>
+      <div className="table-scroll" role="region" aria-label="Feature comparisons" tabIndex={0}>
       <table><thead><tr><th scope="col">Feature</th><th scope="col">Comparison</th><th scope="col">Contribution</th></tr></thead>
         <tbody>{Object.entries(comparisonFeatures).map(([feature, label]) => {
           const level = statistical.evidence.levels[feature]
@@ -174,7 +175,7 @@ function PairCard({ pair, id }: { pair: Pair; id: number }) {
           return <tr key={feature}><th scope="row">{label}</th><td>{comparisonLevels.has(level) ? level : '—'}</td>
             <td>{typeof contribution === 'number' && Number.isFinite(contribution) ? contribution.toFixed(3) : '—'}</td></tr>
         })}</tbody>
-      </table>
+      </table></div>
     </details>
   </article>
 }
